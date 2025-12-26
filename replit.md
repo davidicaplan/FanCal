@@ -66,3 +66,8 @@ The app runs on port 5000 using `npm run dev`.
 - Games list with date and league filters
 - Settings with dark mode and visibility controls
 - localStorage persistence for selections
+- Integrated ESPN public API for real-time game schedules (v1.1)
+  - All games now show accurate dates, times, venues, and broadcast info
+  - Live scores and final results from ESPN
+  - 5-minute cache for optimal performance
+  - Coverage: NBA, NFL, MLB, NHL, NCAA Football, NCAA Basketball, Premier League, La Liga

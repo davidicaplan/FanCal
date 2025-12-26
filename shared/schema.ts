@@ -39,6 +39,8 @@ export const gameSchema = z.object({
   id: z.string(),
   homeTeamId: z.string(),
   awayTeamId: z.string(),
+  homeTeamName: z.string().optional(),
+  awayTeamName: z.string().optional(),
   leagueId: z.enum(leagueIds),
   date: z.string(),
   time: z.string(),
@@ -46,6 +48,7 @@ export const gameSchema = z.object({
   status: z.enum(["scheduled", "live", "final"]).default("scheduled"),
   homeScore: z.number().optional(),
   awayScore: z.number().optional(),
+  broadcast: z.string().optional(),
 });
 
 export type Game = z.infer<typeof gameSchema>;

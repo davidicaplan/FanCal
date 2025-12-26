@@ -6,12 +6,18 @@ import { format, parseISO } from "date-fns";
 
 interface GameCardProps {
   game: Game;
-  homeTeam: Team;
-  awayTeam: Team;
+  homeTeam?: Team;
+  awayTeam?: Team;
   league: League;
 }
 
 export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
+  const homeTeamName = homeTeam?.name || game.homeTeamName || "Home Team";
+  const awayTeamName = awayTeam?.name || game.awayTeamName || "Away Team";
+  const homeTeamCity = homeTeam?.city || "";
+  const awayTeamCity = awayTeam?.city || "";
+  const homeAbbr = homeTeam?.abbreviation?.slice(0, 2) || homeTeamName.slice(0, 2).toUpperCase();
+  const awayAbbr = awayTeam?.abbreviation?.slice(0, 2) || awayTeamName.slice(0, 2).toUpperCase();
   const gameDate = parseISO(game.date);
   const isToday = format(new Date(), "yyyy-MM-dd") === game.date;
   const isTomorrow = format(new Date(Date.now() + 86400000), "yyyy-MM-dd") === game.date;
@@ -47,10 +53,10 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
               className="inline-flex items-center justify-center w-12 h-12 rounded-md text-lg font-bold mb-2"
               style={{ backgroundColor: `${league.color}15`, color: league.color }}
             >
-              {awayTeam.abbreviation.slice(0, 2)}
+              {awayAbbr}
             </div>
-            <p className="font-medium truncate" data-testid={`text-away-team-${game.id}`}>{awayTeam.name}</p>
-            <p className="text-sm text-muted-foreground">{awayTeam.city}</p>
+            <p className="font-medium truncate" data-testid={`text-away-team-${game.id}`}>{awayTeamName}</p>
+            {awayTeamCity && <p className="text-sm text-muted-foreground">{awayTeamCity}</p>}
           </div>
 
           <div className="flex flex-col items-center px-4">
@@ -76,17 +82,26 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
               className="inline-flex items-center justify-center w-12 h-12 rounded-md text-lg font-bold mb-2"
               style={{ backgroundColor: `${league.color}15`, color: league.color }}
             >
-              {homeTeam.abbreviation.slice(0, 2)}
+              {homeAbbr}
             </div>
-            <p className="font-medium truncate" data-testid={`text-home-team-${game.id}`}>{homeTeam.name}</p>
-            <p className="text-sm text-muted-foreground">{homeTeam.city}</p>
+            <p className="font-medium truncate" data-testid={`text-home-team-${game.id}`}>{homeTeamName}</p>
+            {homeTeamCity && <p className="text-sm text-muted-foreground">{homeTeamCity}</p>}
           </div>
         </div>
 
-        {game.venue && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground justify-center pt-2 border-t">
-            <MapPin className="w-3 h-3" />
-            <span data-testid={`text-venue-${game.id}`}>{game.venue}</span>
+        {(game.venue || game.broadcast) && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground justify-center pt-2 border-t flex-wrap">
+            {game.venue && (
+              <div className="flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                <span data-testid={`text-venue-${game.id}`}>{game.venue}</span>
+              </div>
+            )}
+            {game.broadcast && (
+              <Badge variant="outline" className="text-xs">
+                {game.broadcast}
+              </Badge>
+            )}
           </div>
         )}
       </div>
