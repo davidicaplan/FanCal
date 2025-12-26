@@ -55,7 +55,7 @@ const LEAGUE_ID_MAP: Record<string, string> = {
 
 let cachedGames: Game[] = [];
 let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for extended date range
 
 function parseESPNDate(dateStr: string): { date: string; time: string } {
   const dt = new Date(dateStr);
@@ -160,8 +160,23 @@ function getDateRange(): string[] {
   const dates: string[] = [];
   const today = new Date();
 
-  // Get games for past 3 days and next 14 days
-  for (let i = -3; i <= 14; i++) {
+  // Get games for past 3 months and next 3 months (approximately 90 days each)
+  for (let i = -90; i <= 90; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    dates.push(d.toISOString().split("T")[0].replace(/-/g, ""));
+  }
+
+  return dates;
+}
+
+// Batch dates into weekly chunks to reduce API calls
+function getWeeklyDateRanges(): string[] {
+  const dates: string[] = [];
+  const today = new Date();
+
+  // Sample every 7 days for 6 months range (this fetches weekly scoreboard snapshots)
+  for (let i = -90; i <= 90; i += 7) {
     const d = new Date(today);
     d.setDate(d.getDate() + i);
     dates.push(d.toISOString().split("T")[0].replace(/-/g, ""));
@@ -191,10 +206,11 @@ export async function fetchAllGames(): Promise<Game[]> {
     { espnKey: "laliga", leagueId: "la-liga" },
   ];
 
-  const dateRange = getDateRange();
+  // Use weekly sampling to reduce API calls while still covering 6 months
+  const dateRange = getWeeklyDateRanges();
   const allGames: Game[] = [];
 
-  // Fetch from all leagues in parallel
+  // Fetch from all leagues - batch requests to avoid overwhelming ESPN
   const fetchPromises = leagueMapping.flatMap(({ espnKey, leagueId }) =>
     dateRange.map((date) => fetchLeagueSchedule(espnKey, leagueId, date))
   );

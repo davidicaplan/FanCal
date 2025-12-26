@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/empty-state";
 import { GameCard } from "@/components/game-card";
 import { useTeamSelection } from "@/lib/team-selection-context";
 import { leagues, type Game, type Team } from "@shared/schema";
-import { Calendar, Filter } from "lucide-react";
+import { Calendar, Filter, Users } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,6 +22,7 @@ type DateFilter = "all" | "today" | "this-week" | "next-week";
 export default function GamesList() {
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
   const [leagueFilter, setLeagueFilter] = useState<string>("all");
+  const [teamFilter, setTeamFilter] = useState<string>("all");
 
   const { selectedTeams, leagueVisibility, getTotalSelectedTeams } = useTeamSelection();
   const totalSelected = getTotalSelectedTeams();
@@ -40,6 +41,22 @@ export default function GamesList() {
     return map;
   }, [teams]);
 
+  // Get list of user's saved teams for the filter dropdown
+  const savedTeamsList = useMemo(() => {
+    const teamList: Team[] = [];
+    Object.entries(selectedTeams).forEach(([leagueId, teamIds]) => {
+      if (leagueVisibility[leagueId] !== false) {
+        teamIds.forEach((teamId) => {
+          const team = teams.find((t) => t.id === teamId);
+          if (team) {
+            teamList.push(team);
+          }
+        });
+      }
+    });
+    return teamList.sort((a, b) => a.name.localeCompare(b.name));
+  }, [selectedTeams, leagueVisibility, teams]);
+
   // Build a set of ESPN-style team IDs from selected teams
   const selectedEspnTeamIds = useMemo(() => {
     const espnIds = new Set<string>();
@@ -57,12 +74,32 @@ export default function GamesList() {
     return espnIds;
   }, [selectedTeams, leagueVisibility, teams]);
 
+  // Get ESPN ID for a specific team
+  const getEspnTeamId = (team: Team) => {
+    return `${team.leagueId}-${team.abbreviation.toLowerCase()}`;
+  };
+
   const filteredGames = useMemo(() => {
-    // Filter games where either home or away team matches a selected team
-    let filtered = games.filter(
-      (game) =>
-        selectedEspnTeamIds.has(game.homeTeamId) || selectedEspnTeamIds.has(game.awayTeamId)
-    );
+    let filtered: Game[];
+    
+    // If a specific team is selected, filter only that team's games
+    if (teamFilter !== "all") {
+      const focusedTeam = teams.find((t) => t.id === teamFilter);
+      if (focusedTeam) {
+        const focusedEspnId = getEspnTeamId(focusedTeam);
+        filtered = games.filter(
+          (game) => game.homeTeamId === focusedEspnId || game.awayTeamId === focusedEspnId
+        );
+      } else {
+        filtered = [];
+      }
+    } else {
+      // Filter games where either home or away team matches any selected team
+      filtered = games.filter(
+        (game) =>
+          selectedEspnTeamIds.has(game.homeTeamId) || selectedEspnTeamIds.has(game.awayTeamId)
+      );
+    }
 
     if (leagueFilter !== "all") {
       filtered = filtered.filter((game) => game.leagueId === leagueFilter);
@@ -96,7 +133,7 @@ export default function GamesList() {
       if (dateCompare !== 0) return dateCompare;
       return a.time.localeCompare(b.time);
     });
-  }, [games, selectedEspnTeamIds, leagueFilter, dateFilter]);
+  }, [games, selectedEspnTeamIds, leagueFilter, dateFilter, teamFilter, teams]);
 
   const groupedGames = useMemo(() => {
     const groups: { date: string; games: Game[] }[] = [];
@@ -182,6 +219,24 @@ export default function GamesList() {
                 {league.shortName}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={teamFilter} onValueChange={setTeamFilter}>
+          <SelectTrigger className="w-[180px]" data-testid="select-team-filter">
+            <Users className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="All My Teams" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All My Teams</SelectItem>
+            {savedTeamsList.map((team) => {
+              const league = leagues.find((l) => l.id === team.leagueId);
+              return (
+                <SelectItem key={team.id} value={team.id}>
+                  {team.city} {team.name} ({league?.shortName})
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
