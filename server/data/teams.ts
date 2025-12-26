@@ -133,11 +133,11 @@ export const teamsData: Team[] = [
   { id: "nhl-sharks", name: "Sharks", city: "San Jose", abbreviation: "SJS", leagueId: "nhl", conference: "Western", division: "Pacific" },
   { id: "nhl-blue-jackets", name: "Blue Jackets", city: "Columbus", abbreviation: "CBJ", leagueId: "nhl", conference: "Eastern", division: "Metropolitan" },
 
-  // Premier League Teams
+  // Premier League Teams (abbreviations match ESPN API)
   { id: "epl-arsenal", name: "Arsenal", city: "London", abbreviation: "ARS", leagueId: "premier-league" },
-  { id: "epl-mancity", name: "Manchester City", city: "Manchester", abbreviation: "MCI", leagueId: "premier-league" },
+  { id: "epl-mancity", name: "Manchester City", city: "Manchester", abbreviation: "MNC", leagueId: "premier-league" },
   { id: "epl-liverpool", name: "Liverpool", city: "Liverpool", abbreviation: "LIV", leagueId: "premier-league" },
-  { id: "epl-manutd", name: "Manchester United", city: "Manchester", abbreviation: "MUN", leagueId: "premier-league" },
+  { id: "epl-manutd", name: "Manchester United", city: "Manchester", abbreviation: "MAN", leagueId: "premier-league" },
   { id: "epl-chelsea", name: "Chelsea", city: "London", abbreviation: "CHE", leagueId: "premier-league" },
   { id: "epl-tottenham", name: "Tottenham Hotspur", city: "London", abbreviation: "TOT", leagueId: "premier-league" },
   { id: "epl-newcastle", name: "Newcastle United", city: "Newcastle", abbreviation: "NEW", leagueId: "premier-league" },
@@ -155,7 +155,7 @@ export const teamsData: Team[] = [
   { id: "epl-ipswich", name: "Ipswich Town", city: "Ipswich", abbreviation: "IPS", leagueId: "premier-league" },
   { id: "epl-southampton", name: "Southampton", city: "Southampton", abbreviation: "SOU", leagueId: "premier-league" },
 
-  // La Liga Teams
+  // La Liga Teams (abbreviations match ESPN API)
   { id: "laliga-realmadrid", name: "Real Madrid", city: "Madrid", abbreviation: "RMA", leagueId: "la-liga" },
   { id: "laliga-barcelona", name: "Barcelona", city: "Barcelona", abbreviation: "BAR", leagueId: "la-liga" },
   { id: "laliga-atletico", name: "Atletico Madrid", city: "Madrid", abbreviation: "ATM", leagueId: "la-liga" },
@@ -170,12 +170,12 @@ export const teamsData: Team[] = [
   { id: "laliga-getafe", name: "Getafe", city: "Getafe", abbreviation: "GET", leagueId: "la-liga" },
   { id: "laliga-celta", name: "Celta Vigo", city: "Vigo", abbreviation: "CEL", leagueId: "la-liga" },
   { id: "laliga-alaves", name: "Alaves", city: "Vitoria-Gasteiz", abbreviation: "ALA", leagueId: "la-liga" },
-  { id: "laliga-cadiz", name: "Cadiz", city: "Cadiz", abbreviation: "CAD", leagueId: "la-liga" },
   { id: "laliga-mallorca", name: "Mallorca", city: "Palma", abbreviation: "MLL", leagueId: "la-liga" },
-  { id: "laliga-lapalmas", name: "Las Palmas", city: "Las Palmas", abbreviation: "LPA", leagueId: "la-liga" },
   { id: "laliga-rayo", name: "Rayo Vallecano", city: "Madrid", abbreviation: "RAY", leagueId: "la-liga" },
-  { id: "laliga-almeria", name: "Almeria", city: "Almeria", abbreviation: "ALM", leagueId: "la-liga" },
-  { id: "laliga-granada", name: "Granada", city: "Granada", abbreviation: "GRA", leagueId: "la-liga" },
+  { id: "laliga-leganes", name: "Leganes", city: "Leganes", abbreviation: "LEG", leagueId: "la-liga" },
+  { id: "laliga-espanyol", name: "Espanyol", city: "Barcelona", abbreviation: "ESP", leagueId: "la-liga" },
+  { id: "laliga-valladolid", name: "Real Valladolid", city: "Valladolid", abbreviation: "VLL", leagueId: "la-liga" },
+  { id: "laliga-laspalmas", name: "Las Palmas", city: "Las Palmas", abbreviation: "LPA", leagueId: "la-liga" },
 
   // NCAA Football (Top 30 D1 Programs)
   { id: "ncaaf-alabama", name: "Crimson Tide", city: "Alabama", abbreviation: "BAMA", leagueId: "ncaa-football", conference: "SEC" },
