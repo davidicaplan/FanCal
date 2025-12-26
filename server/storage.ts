@@ -1,37 +1,58 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { teamsData, getTeamsByLeague, getTeamById } from "./data/teams";
+import { gamesData } from "./data/games";
+import type { Team, Game, League } from "@shared/schema";
+import { leagues } from "@shared/schema";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getLeagues(): Promise<League[]>;
+  getTeams(leagueId?: string): Promise<Team[]>;
+  getTeamById(teamId: string): Promise<Team | undefined>;
+  getGames(filters?: { leagueId?: string; teamId?: string; startDate?: string; endDate?: string }): Promise<Game[]>;
+  getGameById(gameId: string): Promise<Game | undefined>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+  async getLeagues(): Promise<League[]> {
+    return leagues;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getTeams(leagueId?: string): Promise<Team[]> {
+    if (leagueId) {
+      return getTeamsByLeague(leagueId);
+    }
+    return teamsData;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getTeamById(teamId: string): Promise<Team | undefined> {
+    return getTeamById(teamId);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getGames(filters?: { leagueId?: string; teamId?: string; startDate?: string; endDate?: string }): Promise<Game[]> {
+    let filtered = [...gamesData];
+    
+    if (filters?.leagueId) {
+      filtered = filtered.filter((game) => game.leagueId === filters.leagueId);
+    }
+    
+    if (filters?.teamId) {
+      filtered = filtered.filter(
+        (game) => game.homeTeamId === filters.teamId || game.awayTeamId === filters.teamId
+      );
+    }
+    
+    if (filters?.startDate) {
+      filtered = filtered.filter((game) => game.date >= filters.startDate!);
+    }
+    
+    if (filters?.endDate) {
+      filtered = filtered.filter((game) => game.date <= filters.endDate!);
+    }
+    
+    return filtered;
+  }
+
+  async getGameById(gameId: string): Promise<Game | undefined> {
+    return gamesData.find((g) => g.id === gameId);
   }
 }
 
