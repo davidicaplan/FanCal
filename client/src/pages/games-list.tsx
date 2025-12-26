@@ -42,16 +42,17 @@ export default function GamesList() {
 
   const filteredGames = useMemo(() => {
     const selectedTeamIds = new Set<string>();
+    const selectedLeagueIds = new Set<string>();
+    
     Object.entries(selectedTeams).forEach(([leagueId, teamIds]) => {
-      if (leagueVisibility[leagueId] !== false) {
+      if (leagueVisibility[leagueId] !== false && teamIds.length > 0) {
+        selectedLeagueIds.add(leagueId);
         teamIds.forEach((id) => selectedTeamIds.add(id));
       }
     });
 
-    let filtered = games.filter(
-      (game) =>
-        selectedTeamIds.has(game.homeTeamId) || selectedTeamIds.has(game.awayTeamId)
-    );
+    // Filter games: show all games from leagues where user has selected at least one team
+    let filtered = games.filter((game) => selectedLeagueIds.has(game.leagueId));
 
     if (leagueFilter !== "all") {
       filtered = filtered.filter((game) => game.leagueId === leagueFilter);
@@ -209,7 +210,7 @@ export default function GamesList() {
                     const homeTeam = teamMap.get(game.homeTeamId);
                     const awayTeam = teamMap.get(game.awayTeamId);
                     const league = leagues.find((l) => l.id === game.leagueId);
-                    if (!homeTeam || !awayTeam || !league) return null;
+                    if (!league) return null;
                     return (
                       <GameCard
                         key={game.id}

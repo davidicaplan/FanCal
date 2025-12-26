@@ -55,17 +55,15 @@ export default function CalendarView() {
   }, [teams]);
 
   const filteredGames = useMemo(() => {
-    const selectedTeamIds = new Set<string>();
+    const selectedLeagueIds = new Set<string>();
     Object.entries(selectedTeams).forEach(([leagueId, teamIds]) => {
-      if (leagueVisibility[leagueId] !== false) {
-        teamIds.forEach((id) => selectedTeamIds.add(id));
+      if (leagueVisibility[leagueId] !== false && teamIds.length > 0) {
+        selectedLeagueIds.add(leagueId);
       }
     });
 
-    return games.filter(
-      (game) =>
-        selectedTeamIds.has(game.homeTeamId) || selectedTeamIds.has(game.awayTeamId)
-    );
+    // Show all games from leagues where user has selected at least one team
+    return games.filter((game) => selectedLeagueIds.has(game.leagueId));
   }, [games, selectedTeams, leagueVisibility]);
 
   const calendarDays = useMemo(() => {
@@ -220,7 +218,7 @@ export default function CalendarView() {
                             key={game.id}
                             className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: league?.color || "#888" }}
-                            title={`${teamMap.get(game.awayTeamId)?.abbreviation || "?"} @ ${teamMap.get(game.homeTeamId)?.abbreviation || "?"}`}
+                            title={`${teamMap.get(game.awayTeamId)?.abbreviation || game.awayTeamName?.slice(0, 3) || "?"} @ ${teamMap.get(game.homeTeamId)?.abbreviation || game.homeTeamName?.slice(0, 3) || "?"}`}
                           />
                         );
                       })}
@@ -268,7 +266,7 @@ export default function CalendarView() {
                 const homeTeam = teamMap.get(game.homeTeamId);
                 const awayTeam = teamMap.get(game.awayTeamId);
                 const league = leagues.find((l) => l.id === game.leagueId);
-                if (!homeTeam || !awayTeam || !league) return null;
+                if (!league) return null;
                 return (
                   <GameCard
                     key={game.id}
