@@ -170,21 +170,6 @@ function getDateRange(): string[] {
   return dates;
 }
 
-// Batch dates into weekly chunks to reduce API calls
-function getWeeklyDateRanges(): string[] {
-  const dates: string[] = [];
-  const today = new Date();
-
-  // Sample every 7 days for 6 months range (this fetches weekly scoreboard snapshots)
-  for (let i = -90; i <= 90; i += 7) {
-    const d = new Date(today);
-    d.setDate(d.getDate() + i);
-    dates.push(d.toISOString().split("T")[0].replace(/-/g, ""));
-  }
-
-  return dates;
-}
-
 export async function fetchAllGames(): Promise<Game[]> {
   const now = Date.now();
 
@@ -206,11 +191,11 @@ export async function fetchAllGames(): Promise<Game[]> {
     { espnKey: "laliga", leagueId: "la-liga" },
   ];
 
-  // Use weekly sampling to reduce API calls while still covering 6 months
-  const dateRange = getWeeklyDateRanges();
+  // Fetch all dates for complete 6-month coverage
+  const dateRange = getDateRange();
   const allGames: Game[] = [];
 
-  // Fetch from all leagues - batch requests to avoid overwhelming ESPN
+  // Fetch from all leagues - process in batches to avoid overwhelming ESPN
   const fetchPromises = leagueMapping.flatMap(({ espnKey, leagueId }) =>
     dateRange.map((date) => fetchLeagueSchedule(espnKey, leagueId, date))
   );

@@ -7,7 +7,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { useTeamSelection } from "@/lib/team-selection-context";
 import { leagues, type Game, type Team } from "@shared/schema";
-import { ChevronLeft, ChevronRight, CalendarDays, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, List, Users } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   format,
   startOfMonth,
@@ -36,6 +43,7 @@ export default function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [teamFilter, setTeamFilter] = useState<string>("all");
 
   const { selectedTeams, leagueVisibility, getTotalSelectedTeams } = useTeamSelection();
   const totalSelected = getTotalSelectedTeams();
@@ -54,6 +62,22 @@ export default function CalendarView() {
     return map;
   }, [teams]);
 
+  // Get list of user's saved teams for the filter dropdown
+  const savedTeamsList = useMemo(() => {
+    const teamList: Team[] = [];
+    Object.entries(selectedTeams).forEach(([leagueId, teamIds]) => {
+      if (leagueVisibility[leagueId] !== false) {
+        teamIds.forEach((teamId) => {
+          const team = teams.find((t) => t.id === teamId);
+          if (team) {
+            teamList.push(team);
+          }
+        });
+      }
+    });
+    return teamList.sort((a, b) => a.name.localeCompare(b.name));
+  }, [selectedTeams, leagueVisibility, teams]);
+
   // Build a set of ESPN-style team IDs from selected teams
   const selectedEspnTeamIds = useMemo(() => {
     const espnIds = new Set<string>();
@@ -71,13 +95,30 @@ export default function CalendarView() {
     return espnIds;
   }, [selectedTeams, leagueVisibility, teams]);
 
+  // Get ESPN ID for a specific team
+  const getEspnTeamId = (team: Team) => {
+    return `${team.leagueId}-${team.abbreviation.toLowerCase()}`;
+  };
+
   const filteredGames = useMemo(() => {
-    // Filter games where either home or away team matches a selected team
+    // If a specific team is selected, filter only that team's games
+    if (teamFilter !== "all") {
+      const focusedTeam = teams.find((t) => t.id === teamFilter);
+      if (focusedTeam) {
+        const focusedEspnId = getEspnTeamId(focusedTeam);
+        return games.filter(
+          (game) => game.homeTeamId === focusedEspnId || game.awayTeamId === focusedEspnId
+        );
+      }
+      return [];
+    }
+    
+    // Filter games where either home or away team matches any selected team
     return games.filter(
       (game) =>
         selectedEspnTeamIds.has(game.homeTeamId) || selectedEspnTeamIds.has(game.awayTeamId)
     );
-  }, [games, selectedEspnTeamIds]);
+  }, [games, selectedEspnTeamIds, teamFilter, teams]);
 
   const calendarDays = useMemo(() => {
     if (viewMode === "month") {
@@ -164,6 +205,24 @@ export default function CalendarView() {
               Week
             </Button>
           </div>
+          
+          <Select value={teamFilter} onValueChange={setTeamFilter}>
+            <SelectTrigger className="w-[180px]" data-testid="select-team-filter">
+              <Users className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="All My Teams" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All My Teams</SelectItem>
+              {savedTeamsList.map((team) => {
+                const league = leagues.find((l) => l.id === team.leagueId);
+                return (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.city} {team.name} ({league?.shortName})
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
