@@ -59,12 +59,21 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 function parseESPNDate(dateStr: string): { date: string; time: string } {
   const dt = new Date(dateStr);
-  const date = dt.toISOString().split("T")[0];
+  
+  // Format date in PST timezone to avoid off-by-one-day issues
+  const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "America/Los_Angeles",
+  });
+  const date = dateFormatter.format(dt);
+  
   const time = dt.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
-    timeZone: "America/New_York",
+    timeZone: "America/Los_Angeles",
   });
   return { date, time };
 }

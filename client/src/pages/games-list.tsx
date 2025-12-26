@@ -40,19 +40,29 @@ export default function GamesList() {
     return map;
   }, [teams]);
 
-  const filteredGames = useMemo(() => {
-    const selectedTeamIds = new Set<string>();
-    const selectedLeagueIds = new Set<string>();
-    
+  // Build a set of ESPN-style team IDs from selected teams
+  const selectedEspnTeamIds = useMemo(() => {
+    const espnIds = new Set<string>();
     Object.entries(selectedTeams).forEach(([leagueId, teamIds]) => {
-      if (leagueVisibility[leagueId] !== false && teamIds.length > 0) {
-        selectedLeagueIds.add(leagueId);
-        teamIds.forEach((id) => selectedTeamIds.add(id));
+      if (leagueVisibility[leagueId] !== false) {
+        teamIds.forEach((teamId) => {
+          const team = teams.find((t) => t.id === teamId);
+          if (team) {
+            // ESPN uses format: leagueId-abbreviation (lowercase)
+            espnIds.add(`${leagueId}-${team.abbreviation.toLowerCase()}`);
+          }
+        });
       }
     });
+    return espnIds;
+  }, [selectedTeams, leagueVisibility, teams]);
 
-    // Filter games: show all games from leagues where user has selected at least one team
-    let filtered = games.filter((game) => selectedLeagueIds.has(game.leagueId));
+  const filteredGames = useMemo(() => {
+    // Filter games where either home or away team matches a selected team
+    let filtered = games.filter(
+      (game) =>
+        selectedEspnTeamIds.has(game.homeTeamId) || selectedEspnTeamIds.has(game.awayTeamId)
+    );
 
     if (leagueFilter !== "all") {
       filtered = filtered.filter((game) => game.leagueId === leagueFilter);
@@ -86,7 +96,7 @@ export default function GamesList() {
       if (dateCompare !== 0) return dateCompare;
       return a.time.localeCompare(b.time);
     });
-  }, [games, selectedTeams, leagueVisibility, leagueFilter, dateFilter]);
+  }, [games, selectedEspnTeamIds, leagueFilter, dateFilter]);
 
   const groupedGames = useMemo(() => {
     const groups: { date: string; games: Game[] }[] = [];

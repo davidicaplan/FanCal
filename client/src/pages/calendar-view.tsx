@@ -54,17 +54,30 @@ export default function CalendarView() {
     return map;
   }, [teams]);
 
-  const filteredGames = useMemo(() => {
-    const selectedLeagueIds = new Set<string>();
+  // Build a set of ESPN-style team IDs from selected teams
+  const selectedEspnTeamIds = useMemo(() => {
+    const espnIds = new Set<string>();
     Object.entries(selectedTeams).forEach(([leagueId, teamIds]) => {
-      if (leagueVisibility[leagueId] !== false && teamIds.length > 0) {
-        selectedLeagueIds.add(leagueId);
+      if (leagueVisibility[leagueId] !== false) {
+        teamIds.forEach((teamId) => {
+          const team = teams.find((t) => t.id === teamId);
+          if (team) {
+            // ESPN uses format: leagueId-abbreviation (lowercase)
+            espnIds.add(`${leagueId}-${team.abbreviation.toLowerCase()}`);
+          }
+        });
       }
     });
+    return espnIds;
+  }, [selectedTeams, leagueVisibility, teams]);
 
-    // Show all games from leagues where user has selected at least one team
-    return games.filter((game) => selectedLeagueIds.has(game.leagueId));
-  }, [games, selectedTeams, leagueVisibility]);
+  const filteredGames = useMemo(() => {
+    // Filter games where either home or away team matches a selected team
+    return games.filter(
+      (game) =>
+        selectedEspnTeamIds.has(game.homeTeamId) || selectedEspnTeamIds.has(game.awayTeamId)
+    );
+  }, [games, selectedEspnTeamIds]);
 
   const calendarDays = useMemo(() => {
     if (viewMode === "month") {
