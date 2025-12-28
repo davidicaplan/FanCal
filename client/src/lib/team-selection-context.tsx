@@ -31,6 +31,9 @@ const getDefaultLeagueVisibility = (): Record<string, boolean> => ({
   "ncaa-basketball": true,
   "premier-league": true,
   "la-liga": true,
+  "bundesliga": true,
+  "serie-a": true,
+  "ligue-1": true,
 });
 
 export function TeamSelectionProvider({ children }: { children: React.ReactNode }) {

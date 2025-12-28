@@ -11,7 +11,10 @@ export const leagueIds = [
   "ncaa-football",
   "ncaa-basketball",
   "premier-league",
-  "la-liga"
+  "la-liga",
+  "bundesliga",
+  "serie-a",
+  "ligue-1"
 ] as const;
 
 export type LeagueId = typeof leagueIds[number];
@@ -68,10 +71,13 @@ export const leagues: League[] = [
   { id: "nfl", name: "NFL", shortName: "NFL", teamCount: 32, color: "#013369" },
   { id: "mlb", name: "MLB", shortName: "MLB", teamCount: 30, color: "#002D72" },
   { id: "nhl", name: "NHL", shortName: "NHL", teamCount: 32, color: "#000000" },
-  { id: "ncaa-football", name: "NCAA Football", shortName: "NCAAF", teamCount: 133, color: "#0033A0" },
-  { id: "ncaa-basketball", name: "NCAA Basketball", shortName: "NCAAB", teamCount: 363, color: "#FF6600" },
+  { id: "ncaa-football", name: "NCAA Football", shortName: "NCAAF", teamCount: 130, color: "#0033A0" },
+  { id: "ncaa-basketball", name: "NCAA Basketball", shortName: "NCAAB", teamCount: 129, color: "#FF6600" },
   { id: "premier-league", name: "Premier League", shortName: "EPL", teamCount: 20, color: "#38003c" },
   { id: "la-liga", name: "La Liga", shortName: "LaLiga", teamCount: 20, color: "#EE8707" },
+  { id: "bundesliga", name: "Bundesliga", shortName: "BL", teamCount: 18, color: "#D20515" },
+  { id: "serie-a", name: "Serie A", shortName: "SA", teamCount: 20, color: "#024494" },
+  { id: "ligue-1", name: "Ligue 1", shortName: "L1", teamCount: 18, color: "#091C3E" },
 ];
 
 export const insertUserSchema = z.object({

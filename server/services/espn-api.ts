@@ -40,6 +40,9 @@ const ESPN_ENDPOINTS: Record<string, string> = {
   ncaab: "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard",
   epl: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard",
   laliga: "https://site.api.espn.com/apis/site/v2/sports/soccer/esp.1/scoreboard",
+  bundesliga: "https://site.api.espn.com/apis/site/v2/sports/soccer/ger.1/scoreboard",
+  seriea: "https://site.api.espn.com/apis/site/v2/sports/soccer/ita.1/scoreboard",
+  ligue1: "https://site.api.espn.com/apis/site/v2/sports/soccer/fra.1/scoreboard",
 };
 
 const LEAGUE_ID_MAP: Record<string, string> = {
@@ -51,6 +54,9 @@ const LEAGUE_ID_MAP: Record<string, string> = {
   ncaab: "ncaa-basketball",
   epl: "premier-league",
   laliga: "la-liga",
+  bundesliga: "bundesliga",
+  seriea: "serie-a",
+  ligue1: "ligue-1",
 };
 
 let cachedGames: Game[] = [];
@@ -189,6 +195,9 @@ export async function fetchAllGames(): Promise<Game[]> {
     { espnKey: "ncaab", leagueId: "ncaa-basketball" },
     { espnKey: "epl", leagueId: "premier-league" },
     { espnKey: "laliga", leagueId: "la-liga" },
+    { espnKey: "bundesliga", leagueId: "bundesliga" },
+    { espnKey: "seriea", leagueId: "serie-a" },
+    { espnKey: "ligue1", leagueId: "ligue-1" },
   ];
 
   // Fetch all dates for complete 6-month coverage
