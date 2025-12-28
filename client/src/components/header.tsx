@@ -1,16 +1,26 @@
 import { Link, useLocation } from "wouter";
-import { CalendarDays, List, Settings, Menu, X, Trophy } from "lucide-react";
+import { CalendarDays, List, Settings, Menu, X, Trophy, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/lib/theme-provider";
 import { useTeamSelection } from "@/lib/team-selection-context";
+import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { getTotalSelectedTeams } = useTeamSelection();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const totalTeams = getTotalSelectedTeams();
@@ -26,6 +36,29 @@ export function Header() {
     if (path === "/" && location === "/") return true;
     if (path !== "/" && location.startsWith(path)) return true;
     return false;
+  };
+
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "?";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    return "U";
+  };
+
+  const getUserDisplayName = () => {
+    if (!user) return "";
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    return user.email || "User";
   };
 
   return (
@@ -75,6 +108,54 @@ export function Header() {
               )}
             </Button>
 
+            {isLoading ? (
+              <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
+            ) : isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full"
+                    data-testid="button-user-menu"
+                  >
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user?.profileImageUrl || undefined} alt={getUserDisplayName()} />
+                      <AvatarFallback className="text-xs">{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium" data-testid="text-user-name">{getUserDisplayName()}</p>
+                    {user?.email && (
+                      <p className="text-xs text-muted-foreground" data-testid="text-user-email">{user.email}</p>
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => logout()}
+                    className="gap-2 text-destructive focus:text-destructive"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleLogin}
+                className="gap-2"
+                data-testid="button-login"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">Sign In</span>
+              </Button>
+            )}
+
             <Button
               size="icon"
               variant="ghost"
@@ -107,6 +188,20 @@ export function Header() {
                 </Button>
               </Link>
             ))}
+            {!isAuthenticated && !isLoading && (
+              <>
+                <div className="border-t my-2" />
+                <Button
+                  variant="default"
+                  className="w-full justify-start gap-2"
+                  onClick={handleLogin}
+                  data-testid="mobile-button-login"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+              </>
+            )}
           </nav>
         )}
       </div>

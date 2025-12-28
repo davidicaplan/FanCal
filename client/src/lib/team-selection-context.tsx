@@ -1,5 +1,8 @@
-import { createContext, useContext, useCallback } from "react";
+import { createContext, useContext, useCallback, useEffect, useState, useRef } from "react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { LeagueId } from "@shared/schema";
 
 interface TeamSelectionContextType {
@@ -13,12 +16,13 @@ interface TeamSelectionContextType {
   getSelectedTeamCount: (leagueId: LeagueId) => number;
   getTotalSelectedTeams: () => number;
   clearAllSelections: () => void;
+  isLoading: boolean;
 }
 
 const TeamSelectionContext = createContext<TeamSelectionContextType | undefined>(undefined);
 
-const defaultSelectedTeams: Record<string, string[]> = {};
-const defaultLeagueVisibility: Record<string, boolean> = {
+const getDefaultSelectedTeams = (): Record<string, string[]> => ({});
+const getDefaultLeagueVisibility = (): Record<string, boolean> => ({
   nba: true,
   nfl: true,
   mlb: true,
@@ -27,51 +31,140 @@ const defaultLeagueVisibility: Record<string, boolean> = {
   "ncaa-basketball": true,
   "premier-league": true,
   "la-liga": true,
-};
+});
 
 export function TeamSelectionProvider({ children }: { children: React.ReactNode }) {
-  const [selectedTeams, setSelectedTeams] = useLocalStorage<Record<string, string[]>>(
+  const { user, isLoading: authLoading } = useAuth();
+  const isAuthenticated = !!user;
+  const prevAuthenticatedRef = useRef<boolean | null>(null);
+  const hasLoadedServerDataRef = useRef(false);
+  
+  const [localSelectedTeams, setLocalSelectedTeams] = useLocalStorage<Record<string, string[]>>(
     "sports-calendar-selected-teams",
-    defaultSelectedTeams
+    getDefaultSelectedTeams()
   );
-  const [leagueVisibility, setLeagueVisibility] = useLocalStorage<Record<string, boolean>>(
+  const [localLeagueVisibility, setLocalLeagueVisibility] = useLocalStorage<Record<string, boolean>>(
     "sports-calendar-league-visibility",
-    defaultLeagueVisibility
+    getDefaultLeagueVisibility()
   );
+
+  const [selectedTeams, setSelectedTeams] = useState<Record<string, string[]>>(() => 
+    isAuthenticated ? getDefaultSelectedTeams() : { ...localSelectedTeams }
+  );
+  const [leagueVisibility, setLeagueVisibility] = useState<Record<string, boolean>>(() => 
+    isAuthenticated ? getDefaultLeagueVisibility() : { ...localLeagueVisibility }
+  );
+
+  const { data: serverSelections, isLoading: selectionsLoading, isFetched } = useQuery<{
+    selectedTeams: Record<string, string[]>;
+    leagueVisibility: Record<string, boolean>;
+  }>({
+    queryKey: ["/api/user/selections"],
+    enabled: isAuthenticated,
+    staleTime: 1000 * 60, // 1 minute
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: { selectedTeams: Record<string, string[]>; leagueVisibility: Record<string, boolean> }) => {
+      await apiRequest("POST", "/api/user/selections", data);
+    },
+  });
+
+  // Handle auth state changes
+  useEffect(() => {
+    // On logout: reset to defaults and clear server data flag
+    if (prevAuthenticatedRef.current === true && !isAuthenticated && !authLoading) {
+      hasLoadedServerDataRef.current = false;
+      const newTeams = getDefaultSelectedTeams();
+      const newVisibility = getDefaultLeagueVisibility();
+      setSelectedTeams(newTeams);
+      setLeagueVisibility(newVisibility);
+    }
+    
+    // On login: wait for server data
+    if (prevAuthenticatedRef.current === false && isAuthenticated) {
+      hasLoadedServerDataRef.current = false;
+    }
+    
+    prevAuthenticatedRef.current = isAuthenticated;
+  }, [isAuthenticated, authLoading]);
+
+  // Load server selections when authenticated
+  useEffect(() => {
+    if (isAuthenticated && isFetched && serverSelections && !hasLoadedServerDataRef.current) {
+      hasLoadedServerDataRef.current = true;
+      setSelectedTeams(serverSelections.selectedTeams || getDefaultSelectedTeams());
+      setLeagueVisibility(serverSelections.leagueVisibility || getDefaultLeagueVisibility());
+    }
+  }, [isAuthenticated, serverSelections, isFetched]);
+
+  // Load local storage for guests
+  useEffect(() => {
+    if (!isAuthenticated && !authLoading) {
+      setSelectedTeams({ ...localSelectedTeams });
+      setLeagueVisibility({ ...localLeagueVisibility });
+    }
+  }, [authLoading]);
+
+  const saveSelections = useCallback((newSelectedTeams: Record<string, string[]>, newLeagueVisibility: Record<string, boolean>) => {
+    if (isAuthenticated && hasLoadedServerDataRef.current) {
+      saveMutation.mutate({ selectedTeams: newSelectedTeams, leagueVisibility: newLeagueVisibility });
+    } else if (!isAuthenticated) {
+      setLocalSelectedTeams({ ...newSelectedTeams });
+      setLocalLeagueVisibility({ ...newLeagueVisibility });
+    }
+  }, [isAuthenticated, saveMutation, setLocalSelectedTeams, setLocalLeagueVisibility]);
 
   const toggleTeam = useCallback((leagueId: LeagueId, teamId: string) => {
     setSelectedTeams((prev) => {
       const leagueTeams = prev[leagueId] || [];
       const isSelected = leagueTeams.includes(teamId);
-      return {
+      const newTeams = {
         ...prev,
         [leagueId]: isSelected
           ? leagueTeams.filter((id) => id !== teamId)
           : [...leagueTeams, teamId],
       };
+      setLeagueVisibility((currentVisibility) => {
+        saveSelections(newTeams, currentVisibility);
+        return currentVisibility;
+      });
+      return newTeams;
     });
-  }, [setSelectedTeams]);
+  }, [saveSelections]);
 
   const selectAllTeams = useCallback((leagueId: LeagueId, teamIds: string[]) => {
-    setSelectedTeams((prev) => ({
-      ...prev,
-      [leagueId]: teamIds,
-    }));
-  }, [setSelectedTeams]);
+    setSelectedTeams((prev) => {
+      const newTeams = { ...prev, [leagueId]: [...teamIds] };
+      setLeagueVisibility((currentVisibility) => {
+        saveSelections(newTeams, currentVisibility);
+        return currentVisibility;
+      });
+      return newTeams;
+    });
+  }, [saveSelections]);
 
   const clearAllTeams = useCallback((leagueId: LeagueId) => {
-    setSelectedTeams((prev) => ({
-      ...prev,
-      [leagueId]: [],
-    }));
-  }, [setSelectedTeams]);
+    setSelectedTeams((prev) => {
+      const newTeams = { ...prev, [leagueId]: [] };
+      setLeagueVisibility((currentVisibility) => {
+        saveSelections(newTeams, currentVisibility);
+        return currentVisibility;
+      });
+      return newTeams;
+    });
+  }, [saveSelections]);
 
   const toggleLeagueVisibility = useCallback((leagueId: LeagueId) => {
-    setLeagueVisibility((prev) => ({
-      ...prev,
-      [leagueId]: !prev[leagueId],
-    }));
-  }, [setLeagueVisibility]);
+    setLeagueVisibility((prev) => {
+      const newVisibility = { ...prev, [leagueId]: !prev[leagueId] };
+      setSelectedTeams((currentTeams) => {
+        saveSelections(currentTeams, newVisibility);
+        return currentTeams;
+      });
+      return newVisibility;
+    });
+  }, [saveSelections]);
 
   const isTeamSelected = useCallback((leagueId: LeagueId, teamId: string) => {
     return (selectedTeams[leagueId] || []).includes(teamId);
@@ -86,9 +179,14 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
   }, [selectedTeams]);
 
   const clearAllSelections = useCallback(() => {
-    setSelectedTeams(defaultSelectedTeams);
-    setLeagueVisibility(defaultLeagueVisibility);
-  }, [setSelectedTeams, setLeagueVisibility]);
+    const newTeams = getDefaultSelectedTeams();
+    const newVisibility = getDefaultLeagueVisibility();
+    setSelectedTeams(newTeams);
+    setLeagueVisibility(newVisibility);
+    saveSelections(newTeams, newVisibility);
+  }, [saveSelections]);
+
+  const isLoading = authLoading || (isAuthenticated && selectionsLoading && !hasLoadedServerDataRef.current);
 
   return (
     <TeamSelectionContext.Provider
@@ -103,6 +201,7 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
         getSelectedTeamCount,
         getTotalSelectedTeams,
         clearAllSelections,
+        isLoading,
       }}
     >
       {children}
