@@ -80,10 +80,11 @@ Group of Five Conferences:
 - Sun Belt (14 teams)
 - Independents (3 teams)
 
-### NCAA Basketball (Division I - 129 teams)
-Major Conferences:
-- ACC, Big East, Big Ten, Big 12, SEC
-- AAC, WCC, Mountain West, Atlantic 10, Pac-12
+### NCAA Basketball (Division I - 360 teams)
+All 32 Division I Conferences:
+- Power Conferences: ACC, Big East, Big Ten, Big 12, SEC
+- Mid-Major Conferences: AAC, WCC, Mountain West, Atlantic 10, Pac-12, Missouri Valley, Conference USA
+- Other Conferences: America East, ASUN, Big Sky, Big South, Big West, CAA, Horizon League, Ivy League, MAAC, MAC, MEAC, NEC, Ohio Valley, Patriot League, Southern Conference, Southland, SWAC, Summit League, Sun Belt, WAC
 
 ## Key Features
 1. **User Authentication**: Sign in with Google, GitHub, email via Replit Auth
