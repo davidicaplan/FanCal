@@ -1,12 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { CalendarDays, List, Settings, Menu, X, Trophy, LogIn, LogOut, User } from "lucide-react";
+import { CalendarDays, List, Settings, Menu, X, Trophy, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useTheme } from "@/lib/theme-provider";
 import { useTeamSelection } from "@/lib/team-selection-context";
 import { useAuth } from "@/hooks/use-auth";
 import { useState } from "react";
-import { Moon, Sun } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -18,7 +16,6 @@ import {
 
 export function Header() {
   const [location] = useLocation();
-  const { theme, toggleTheme } = useTheme();
   const { getTotalSelectedTeams } = useTeamSelection();
   const { user, isLoading, isAuthenticated, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -69,19 +66,19 @@ export function Header() {
         <div className="flex h-16 items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {isOnTeamSelection ? (
-              <Link href="/calendar" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-view-calendar">
-                <CalendarDays className="w-4 h-4" />
+              <Link href="/calendar" className="flex items-center gap-1.5 px-2.5 py-2 bg-blue-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2" data-testid="link-view-calendar">
+                <CalendarDays className="w-3.5 h-3.5" />
                 <span>View Calendar</span>
               </Link>
             ) : (
-              <Link href="/" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-select-teams">
-                <Trophy className="w-4 h-4" />
+              <Link href="/" className="flex items-center gap-1.5 px-2.5 py-2 bg-blue-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2" data-testid="link-select-teams">
+                <Trophy className="w-3.5 h-3.5" />
                 <span>Select Teams</span>
               </Link>
             )}
-            <Link href="/games" className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-upcoming">
-              <CalendarDays className="w-4 h-4" />
-              <span>Upcoming</span>
+            <Link href="/games" className="flex items-center gap-1.5 px-2.5 py-2 bg-emerald-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2" data-testid="link-upcoming-games">
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Upcoming Games</span>
             </Link>
           </div>
 
@@ -106,19 +103,6 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={toggleTheme}
-              data-testid="button-theme-toggle"
-            >
-              {theme === "light" ? (
-                <Moon className="w-5 h-5" />
-              ) : (
-                <Sun className="w-5 h-5" />
-              )}
-            </Button>
-
             {isLoading ? (
               <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
             ) : isAuthenticated ? (
