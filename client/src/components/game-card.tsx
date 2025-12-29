@@ -13,8 +13,12 @@ interface GameCardProps {
 }
 
 export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
-  const homeTeamName = homeTeam?.name || game.homeTeamName || "Home Team";
-  const awayTeamName = awayTeam?.name || game.awayTeamName || "Away Team";
+  const homeTeamFullName = homeTeam?.name || game.homeTeamName || "Home Team";
+  const awayTeamFullName = awayTeam?.name || game.awayTeamName || "Away Team";
+  const homeTeamAbbr = homeTeam?.abbreviation || homeTeamFullName.slice(0, 4).toUpperCase();
+  const awayTeamAbbr = awayTeam?.abbreviation || awayTeamFullName.slice(0, 4).toUpperCase();
+  const homeTeamName = homeTeamFullName.length > 14 ? homeTeamAbbr : homeTeamFullName;
+  const awayTeamName = awayTeamFullName.length > 14 ? awayTeamAbbr : awayTeamFullName;
   const homeTeamCity = homeTeam?.city || "";
   const awayTeamCity = awayTeam?.city || "";
   const gameDate = parseISO(game.date);
@@ -47,7 +51,7 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
         </div>
 
         <div className="flex items-center justify-center gap-4">
-          <div className="flex-1 flex flex-col items-end">
+          <div className="flex-1 flex flex-col items-end min-w-0">
             <div className="mb-2">
               {awayTeam ? (
                 <TeamLogo 
@@ -65,13 +69,13 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
                 </div>
               )}
             </div>
-            {awayTeamCity && <p className="text-sm text-muted-foreground text-right">{awayTeamCity}</p>}
-            <p className="font-medium truncate text-right" data-testid={`text-away-team-${game.id}`}>{awayTeamName}</p>
+            {awayTeamCity && <p className="text-xs text-muted-foreground text-right truncate max-w-full">{awayTeamCity}</p>}
+            <p className="text-sm font-medium truncate text-right max-w-full" data-testid={`text-away-team-${game.id}`}>{awayTeamName}</p>
           </div>
 
-          <div className="flex flex-col items-center px-4">
+          <div className="flex flex-col items-center px-2 shrink-0">
             {game.status === "final" && game.awayScore !== undefined && game.homeScore !== undefined ? (
-              <div className="flex items-center gap-2 font-mono text-xl font-bold">
+              <div className="flex items-center gap-1 font-mono text-lg font-bold">
                 <span>{game.awayScore}</span>
                 <span className="text-muted-foreground">-</span>
                 <span>{game.homeScore}</span>
@@ -87,7 +91,7 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col items-start">
+          <div className="flex-1 flex flex-col items-start min-w-0">
             <div className="mb-2">
               {homeTeam ? (
                 <TeamLogo 
@@ -105,8 +109,8 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
                 </div>
               )}
             </div>
-            {homeTeamCity && <p className="text-sm text-muted-foreground">{homeTeamCity}</p>}
-            <p className="font-medium truncate" data-testid={`text-home-team-${game.id}`}>{homeTeamName}</p>
+            {homeTeamCity && <p className="text-xs text-muted-foreground truncate max-w-full">{homeTeamCity}</p>}
+            <p className="text-sm font-medium truncate max-w-full" data-testid={`text-home-team-${game.id}`}>{homeTeamName}</p>
           </div>
         </div>
 

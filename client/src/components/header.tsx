@@ -25,8 +25,10 @@ export function Header() {
   
   const totalTeams = getTotalSelectedTeams();
 
+  const isOnTeamSelection = location === "/" || location.startsWith("/teams");
+
   const navItems = [
-    { path: "/", label: "Leagues", icon: Trophy },
+    { path: "/", label: "Teams", icon: Trophy },
     { path: "/calendar", label: "Calendar", icon: CalendarDays },
     { path: "/games", label: "Games", icon: List },
     { path: "/settings", label: "Settings", icon: Settings },
@@ -64,26 +66,24 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {location === "/" ? (
-            <Link href="/calendar" className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground">
-                <CalendarDays className="w-5 h-5" />
-              </div>
-              <span className="font-semibold text-lg hidden sm:inline" data-testid="text-app-name">
-                FanCal
-              </span>
+        <div className="flex h-16 items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {isOnTeamSelection ? (
+              <Link href="/calendar" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover-elevate active-elevate-2" data-testid="link-view-calendar">
+                <CalendarDays className="w-4 h-4" />
+                <span className="hidden sm:inline">View Calendar</span>
+              </Link>
+            ) : (
+              <Link href="/" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover-elevate active-elevate-2" data-testid="link-select-teams">
+                <Trophy className="w-4 h-4" />
+                <span className="hidden sm:inline">Select Teams</span>
+              </Link>
+            )}
+            <Link href="/games" className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md font-medium hover-elevate active-elevate-2" data-testid="link-view-games">
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Upcoming Games</span>
             </Link>
-          ) : (
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground">
-                <Trophy className="w-5 h-5" />
-              </div>
-              <span className="font-semibold text-lg hidden sm:inline" data-testid="text-app-name">
-                FanCal
-              </span>
-            </Link>
-          )}
+          </div>
 
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (
