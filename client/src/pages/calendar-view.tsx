@@ -30,7 +30,6 @@ import {
   isToday,
   addDays,
 } from "date-fns";
-import { toZonedTime } from "date-fns-tz";
 import {
   Dialog,
   DialogContent,
@@ -44,8 +43,6 @@ import { Label } from "@/components/ui/label";
 import { GameCard } from "@/components/game-card";
 
 type ViewMode = "month" | "week";
-
-const ET_TIMEZONE = "America/New_York";
 
 function isValidGameTime(time: string): boolean {
   if (!time || time.toUpperCase() === "TBD" || time.toUpperCase() === "TBA") {
@@ -72,15 +69,31 @@ function parseGameDateTime(time: string, date: string): Date | null {
     }
   }
   
-  const dateTimeStr = `${date}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
-  try {
-    const localDate = new Date(dateTimeStr);
-    const etDate = toZonedTime(localDate, ET_TIMEZONE);
-    const offset = localDate.getTime() - etDate.getTime();
-    return new Date(localDate.getTime() + offset);
-  } catch {
-    return null;
-  }
+  // ESPN provides times in Eastern Time
+  // Parse the date to check if DST is in effect
+  const [year, month, day] = date.split("-").map(Number);
+  
+  // US DST: Second Sunday in March to First Sunday in November
+  const isDST = (() => {
+    if (month > 3 && month < 11) return true;
+    if (month < 3 || month > 11) return false;
+    if (month === 3) {
+      const firstDay = new Date(year, 2, 1).getDay();
+      const secondSunday = 8 + (7 - firstDay) % 7;
+      return day >= secondSunday;
+    }
+    const firstDay = new Date(year, 10, 1).getDay();
+    const firstSunday = 1 + (7 - firstDay) % 7;
+    return day < firstSunday;
+  })();
+  
+  const etOffset = isDST ? -4 : -5; // EDT is UTC-4, EST is UTC-5
+  
+  // Create UTC time from Eastern Time
+  const utcHours = hours - etOffset;
+  const utcDate = new Date(Date.UTC(year, month - 1, day, utcHours, minutes, 0));
+  
+  return utcDate;
 }
 
 function formatICSDate(date: Date): string {

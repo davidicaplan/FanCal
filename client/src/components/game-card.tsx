@@ -5,7 +5,7 @@ import { MapPin, Clock, CalendarPlus } from "lucide-react";
 import { TeamLogo } from "@/components/team-logo";
 import type { Game, Team, League } from "@shared/schema";
 import { format, parseISO } from "date-fns";
-import { formatInTimeZone, toZonedTime } from "date-fns-tz";
+import { formatInTimeZone } from "date-fns-tz";
 
 interface GameCardProps {
   game: Game;
@@ -42,19 +42,39 @@ function parseGameDateTime(time: string, date: string): Date | null {
     }
   }
   
-  // Create date string and parse as Eastern Time (handles DST automatically)
-  const dateTimeStr = `${date}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
-  try {
-    // Parse the date-time string as if it's in Eastern Time zone
-    // First create a Date from the string, then use toZonedTime to get the correct UTC time
-    const localDate = new Date(dateTimeStr);
-    // Calculate offset between local interpretation and Eastern Time
-    const etDate = toZonedTime(localDate, ET_TIMEZONE);
-    const offset = localDate.getTime() - etDate.getTime();
-    return new Date(localDate.getTime() + offset);
-  } catch {
-    return null;
-  }
+  // ESPN provides times in Eastern Time
+  // Parse as Eastern Time and convert to UTC
+  // For dates in Standard Time (Nov-Mar): ET = UTC-5
+  // For dates in Daylight Time (Mar-Nov): ET = UTC-4
+  
+  // Parse the date to check if DST is in effect
+  const [year, month, day] = date.split("-").map(Number);
+  
+  // Create a Date object to check DST status for Eastern Time
+  // US DST: Second Sunday in March to First Sunday in November
+  const isDST = (() => {
+    // Approximate DST check for US Eastern Time
+    if (month > 3 && month < 11) return true;
+    if (month < 3 || month > 11) return false;
+    if (month === 3) {
+      // Second Sunday in March - DST starts
+      const firstDay = new Date(year, 2, 1).getDay();
+      const secondSunday = 8 + (7 - firstDay) % 7;
+      return day >= secondSunday;
+    }
+    // First Sunday in November - DST ends
+    const firstDay = new Date(year, 10, 1).getDay();
+    const firstSunday = 1 + (7 - firstDay) % 7;
+    return day < firstSunday;
+  })();
+  
+  const etOffset = isDST ? -4 : -5; // EDT is UTC-4, EST is UTC-5
+  
+  // Create UTC time from Eastern Time
+  const utcHours = hours - etOffset;
+  const utcDate = new Date(Date.UTC(year, month - 1, day, utcHours, minutes, 0));
+  
+  return utcDate;
 }
 
 function formatICSDate(date: Date): string {
