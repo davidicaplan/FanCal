@@ -144,7 +144,7 @@ export default function CalendarView() {
         });
       }
     });
-    return teamList.sort((a, b) => a.name.localeCompare(b.name));
+    return teamList.sort((a, b) => `${a.city} ${a.name}`.localeCompare(`${b.city} ${b.name}`));
   }, [selectedTeams, leagueVisibility, teams]);
 
   // Build a set of ESPN-style team IDs from selected teams
