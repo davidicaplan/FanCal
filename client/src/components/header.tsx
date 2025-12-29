@@ -79,9 +79,9 @@ export function Header() {
                 <span>Select Teams</span>
               </Link>
             )}
-            <Link href="/games" className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-view-games">
-              <List className="w-4 h-4" />
-              <span className="hidden sm:inline">Upcoming</span>
+            <Link href="/games" className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-upcoming">
+              <CalendarDays className="w-4 h-4" />
+              <span>Upcoming</span>
             </Link>
           </div>
 
