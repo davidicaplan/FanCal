@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTeamSelection } from "@/lib/team-selection-context";
 import { leagues, type Team } from "@shared/schema";
-import { ArrowLeft, Search, CheckSquare, XSquare, Filter } from "lucide-react";
+import { ArrowLeft, Search, CheckSquare, XSquare, Filter, LogIn } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,6 +16,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function TeamSelection() {
   const params = useParams<{ leagueId: string }>();
@@ -24,8 +31,12 @@ export default function TeamSelection() {
   const [conferenceFilter, setConferenceFilter] = useState<string>("all");
 
   const league = leagues.find((l) => l.id === params.leagueId);
-  const { toggleTeam, selectAllTeams, clearAllTeams, isTeamSelected, getSelectedTeamCount } =
+  const { toggleTeam, selectAllTeams, clearAllTeams, isTeamSelected, getSelectedTeamCount, showLoginPrompt, setShowLoginPrompt } =
     useTeamSelection();
+
+  const handleLogin = () => {
+    window.location.href = "/api/login";
+  };
 
   const { data: teams = [], isLoading } = useQuery<Team[]>({
     queryKey: [`/api/teams/${params.leagueId}`],
@@ -183,6 +194,26 @@ export default function TeamSelection() {
           ))}
         </div>
       )}
+
+      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign in to Save Teams</DialogTitle>
+            <DialogDescription>
+              Sign in to save your team selections and access them from any device.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-4">
+            <Button onClick={handleLogin} className="gap-2" data-testid="button-login-prompt">
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </Button>
+            <Button variant="outline" onClick={() => setShowLoginPrompt(false)} data-testid="button-cancel-login">
+              Maybe Later
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -20,7 +20,7 @@ import { format, parseISO, isToday, addDays, isBefore, isAfter, startOfDay, endO
 type DateFilter = "all" | "today" | "this-week" | "next-week";
 
 export default function GamesList() {
-  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("this-week");
   const [leagueFilter, setLeagueFilter] = useState<string>("all");
   const [teamFilter, setTeamFilter] = useState<string>("all");
 

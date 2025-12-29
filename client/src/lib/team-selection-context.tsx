@@ -17,6 +17,8 @@ interface TeamSelectionContextType {
   getTotalSelectedTeams: () => number;
   clearAllSelections: () => void;
   isLoading: boolean;
+  showLoginPrompt: boolean;
+  setShowLoginPrompt: (show: boolean) => void;
 }
 
 const TeamSelectionContext = createContext<TeamSelectionContextType | undefined>(undefined);
@@ -41,6 +43,7 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
   const isAuthenticated = !!user;
   const prevAuthenticatedRef = useRef<boolean | null>(null);
   const hasLoadedServerDataRef = useRef(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
   const [localSelectedTeams, setLocalSelectedTeams] = useLocalStorage<Record<string, string[]>>(
     "sports-calendar-selected-teams",
@@ -119,6 +122,12 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
   }, [isAuthenticated, saveMutation, setLocalSelectedTeams, setLocalLeagueVisibility]);
 
   const toggleTeam = useCallback((leagueId: LeagueId, teamId: string) => {
+    // If not authenticated, show login prompt
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
     setSelectedTeams((prev) => {
       const leagueTeams = prev[leagueId] || [];
       const isSelected = leagueTeams.includes(teamId);
@@ -134,9 +143,14 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
       });
       return newTeams;
     });
-  }, [saveSelections]);
+  }, [saveSelections, isAuthenticated]);
 
   const selectAllTeams = useCallback((leagueId: LeagueId, teamIds: string[]) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
     setSelectedTeams((prev) => {
       const newTeams = { ...prev, [leagueId]: [...teamIds] };
       setLeagueVisibility((currentVisibility) => {
@@ -145,9 +159,14 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
       });
       return newTeams;
     });
-  }, [saveSelections]);
+  }, [saveSelections, isAuthenticated]);
 
   const clearAllTeams = useCallback((leagueId: LeagueId) => {
+    if (!isAuthenticated) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
     setSelectedTeams((prev) => {
       const newTeams = { ...prev, [leagueId]: [] };
       setLeagueVisibility((currentVisibility) => {
@@ -156,7 +175,7 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
       });
       return newTeams;
     });
-  }, [saveSelections]);
+  }, [saveSelections, isAuthenticated]);
 
   const toggleLeagueVisibility = useCallback((leagueId: LeagueId) => {
     setLeagueVisibility((prev) => {
@@ -205,6 +224,8 @@ export function TeamSelectionProvider({ children }: { children: React.ReactNode 
         getTotalSelectedTeams,
         clearAllSelections,
         isLoading,
+        showLoginPrompt,
+        setShowLoginPrompt,
       }}
     >
       {children}

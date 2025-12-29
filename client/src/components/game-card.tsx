@@ -4,12 +4,42 @@ import { MapPin, Clock } from "lucide-react";
 import { TeamLogo } from "@/components/team-logo";
 import type { Game, Team, League } from "@shared/schema";
 import { format, parseISO } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 
 interface GameCardProps {
   game: Game;
   homeTeam?: Team;
   awayTeam?: Team;
   league: League;
+}
+
+const PST_TIMEZONE = "America/Los_Angeles";
+
+function convertTimeToPST(time: string, date: string): string {
+  try {
+    // Parse the time (assumed to be in format like "7:00 PM" or "19:00")
+    const [timePart, period] = time.split(" ");
+    let [hours, minutes] = timePart.split(":").map(Number);
+    
+    // Convert to 24-hour format if AM/PM
+    if (period) {
+      if (period.toUpperCase() === "PM" && hours !== 12) {
+        hours += 12;
+      } else if (period.toUpperCase() === "AM" && hours === 12) {
+        hours = 0;
+      }
+    }
+    
+    // Create a date object with the game date and time
+    // ESPN times are typically in Eastern Time
+    const gameDateTime = new Date(`${date}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00-05:00`);
+    
+    // Format in PST
+    return formatInTimeZone(gameDateTime, PST_TIMEZONE, "h:mm a") + " PST";
+  } catch {
+    // If parsing fails, return original time
+    return time;
+  }
 }
 
 export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
@@ -22,6 +52,7 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
   const homeTeamCity = homeTeam?.city || "";
   const awayTeamCity = awayTeam?.city || "";
   const gameDate = parseISO(game.date);
+  const gamePSTTime = convertTimeToPST(game.time, game.date);
   const isToday = format(new Date(), "yyyy-MM-dd") === game.date;
   const isTomorrow = format(new Date(Date.now() + 86400000), "yyyy-MM-dd") === game.date;
 
@@ -46,7 +77,7 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
             <span className="font-mono" data-testid={`text-date-${game.id}`}>{getDateLabel()}</span>
             <span className="text-muted-foreground/50">|</span>
             <Clock className="w-3 h-3" />
-            <span className="font-mono" data-testid={`text-time-${game.id}`}>{game.time}</span>
+            <span className="font-mono" data-testid={`text-time-${game.id}`}>{gamePSTTime}</span>
           </div>
         </div>
 
