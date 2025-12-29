@@ -119,6 +119,13 @@ All 32 Division I Conferences:
 ## Running the App
 The app runs on port 5000 using `npm run dev`.
 
+## PWA Features
+The app is a Progressive Web App (PWA) that can be installed on mobile devices:
+- **Offline Support**: Service worker caches static assets and API responses
+- **Add to Home Screen**: Users can install the app to their device's home screen
+- **App Icons**: Full set of icons for iOS and Android devices
+- **Standalone Mode**: Runs in fullscreen without browser chrome when installed
+
 ## Recent Changes
 - v1.3: Expanded to 11 leagues with comprehensive team coverage
   - Added Bundesliga (18 teams), Serie A (20 teams), Ligue 1 (18 teams)
