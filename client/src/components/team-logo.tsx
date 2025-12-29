@@ -46,7 +46,7 @@ function getTeamLogoUrl(team: { abbreviation: string; city?: string }, leagueId:
     case "bundesliga":
     case "serie-a":
     case "ligue-1": {
-      const espnId = getSoccerEspnTeamId(abbr);
+      const espnId = getSoccerEspnTeamId(abbr, leagueId);
       if (espnId) {
         return `https://a.espncdn.com/i/teamlogos/soccer/500/${espnId}.png`;
       }

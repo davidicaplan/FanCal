@@ -79,7 +79,7 @@ export const leagues: League[] = [
   { id: "mls", name: "MLS", shortName: "MLS", teamCount: 29, color: "#DA291C" },
   { id: "ncaa-football", name: "NCAA Football", shortName: "NCAAF", teamCount: 130, color: "#0033A0" },
   { id: "ncaa-basketball", name: "NCAA Men's Basketball", shortName: "NCAAB", teamCount: 360, color: "#FF6600" },
-  { id: "ncaa-womens-basketball", name: "NCAA Women's Basketball", shortName: "NCAAW", teamCount: 79, color: "#FF6600" },
+  { id: "ncaa-womens-basketball", name: "NCAA Women's Basketball", shortName: "NCAAW", teamCount: 364, color: "#FF6600" },
   { id: "premier-league", name: "Premier League", shortName: "EPL", teamCount: 20, color: "#38003c" },
   { id: "la-liga", name: "La Liga", shortName: "LaLiga", teamCount: 20, color: "#EE8707" },
   { id: "bundesliga", name: "Bundesliga", shortName: "BL", teamCount: 18, color: "#D20515" },

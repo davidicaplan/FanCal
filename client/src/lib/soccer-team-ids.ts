@@ -49,17 +49,17 @@ export const soccerEspnIds: Record<string, string> = {
   'bvb': '124',      // Borussia Dortmund
   'b04': '131',      // Bayer Leverkusen
   'rbl': '11420',    // RB Leipzig
-  'tsg': '3205',     // Hoffenheim
+  'tsg': '7911',     // Hoffenheim
   'vfb': '134',      // VfB Stuttgart
   'sge': '125',      // Eintracht Frankfurt
-  'fcu': '10999',    // Union Berlin
+  'fcu': '598',      // Union Berlin
   'scf': '129',      // SC Freiburg
   'svw': '133',      // Werder Bremen
   'bmg': '123',      // Borussia Monchengladbach
   'wob': '135',      // Wolfsburg
-  'aug': '10204',    // FC Augsburg
-  'stp': '10801',    // St. Pauli
-  'hdh': '12491',    // Heidenheim
+  'aug': '3841',     // FC Augsburg
+  'stp': '270',      // St. Pauli
+  'hdh': '6418',     // Heidenheim
   'm05': '127',      // Mainz 05
   'boc': '221',      // VfL Bochum
   'kie': '10374',    // Holstein Kiel
@@ -83,29 +83,43 @@ export const soccerEspnIds: Record<string, string> = {
   'hel': '276',      // Hellas Verona
   'fio': '109',      // Fiorentina
   'emp': '230',      // Empoli
-  'mon': '3472',     // Monza
   'ven': '120',      // Venezia
   
   // Ligue 1
-  'len': '3779',     // RC Lens
+  'len': '175',      // RC Lens
   'psg': '160',      // Paris Saint-Germain
-  'mar': '158',      // Olympique Marseille
+  'mar': '176',      // Olympique Marseille
   'lil': '166',      // Lille
-  'lyo': '163',      // Lyon
+  'lyo': '167',      // Lyon
   'ren': '164',      // Rennes
-  'str': '3780',     // Strasbourg
-  'tou': '180',      // Toulouse
+  'str': '180',      // Strasbourg
+  'tou': '3239',     // Toulouse
   'ang': '169',      // Angers
   'nic': '162',      // Nice
-  'hav': '3778',     // Le Havre
-  'aux': '167',      // Auxerre
+  'hav': '3236',     // Le Havre
+  'aux': '3233',     // Auxerre
   'nan': '165',      // Nantes
-  'rei': '3784',     // Reims
-  'mtp': '176',      // Montpellier
+  'rei': '3243',     // Reims
+  'mtp': '178',      // Montpellier
   'ste': '186',      // Saint-Etienne
+  'mon': '174',      // Monaco (Ligue 1)
+  
+  // League-specific disambiguation (leagueId-abbreviation format)
+  'serie-a-mon': '3472',   // Monza (Serie A)
+  'ligue-1-mon': '174',    // Monaco (Ligue 1)
 };
 
-export function getSoccerEspnTeamId(abbreviation: string): string | null {
+export function getSoccerEspnTeamId(abbreviation: string, leagueId?: string): string | null {
   const abbr = abbreviation.toLowerCase();
+  
+  // Try league-specific key first if leagueId provided
+  if (leagueId) {
+    const leagueKey = `${leagueId}-${abbr}`;
+    if (soccerEspnIds[leagueKey]) {
+      return soccerEspnIds[leagueKey];
+    }
+  }
+  
+  // Fall back to abbreviation-only lookup
   return soccerEspnIds[abbr] || null;
 }

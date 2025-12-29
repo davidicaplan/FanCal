@@ -69,19 +69,19 @@ export function Header() {
         <div className="flex h-16 items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {isOnTeamSelection ? (
-              <Link href="/calendar" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover-elevate active-elevate-2" data-testid="link-view-calendar">
+              <Link href="/calendar" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-view-calendar">
                 <CalendarDays className="w-4 h-4" />
-                <span className="hidden sm:inline">View Calendar</span>
+                <span>View Calendar</span>
               </Link>
             ) : (
-              <Link href="/" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium hover-elevate active-elevate-2" data-testid="link-select-teams">
+              <Link href="/" className="flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-select-teams">
                 <Trophy className="w-4 h-4" />
-                <span className="hidden sm:inline">Select Teams</span>
+                <span>Select Teams</span>
               </Link>
             )}
-            <Link href="/games" className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md font-medium hover-elevate active-elevate-2" data-testid="link-view-games">
+            <Link href="/games" className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground rounded-md font-medium text-sm hover-elevate active-elevate-2" data-testid="link-view-games">
               <List className="w-4 h-4" />
-              <span className="hidden sm:inline">Upcoming Games</span>
+              <span className="hidden sm:inline">Upcoming</span>
             </Link>
           </div>
 
