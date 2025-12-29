@@ -2,6 +2,7 @@ import { useState } from "react";
 import footballIcon from "@assets/IMG_8879_1766992529055.jpeg";
 import basketballIcon from "@assets/IMG_8880_1766992529055.jpeg";
 import { getEspnTeamId } from "@/lib/espn-team-ids";
+import { getSoccerEspnTeamId } from "@/lib/soccer-team-ids";
 
 interface TeamLogoProps {
   team: {
@@ -44,8 +45,13 @@ function getTeamLogoUrl(team: { abbreviation: string; city?: string }, leagueId:
     case "la-liga":
     case "bundesliga":
     case "serie-a":
-    case "ligue-1":
+    case "ligue-1": {
+      const espnId = getSoccerEspnTeamId(abbr);
+      if (espnId) {
+        return `https://a.espncdn.com/i/teamlogos/soccer/500/${espnId}.png`;
+      }
       return `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/${abbr}.png&h=80&w=80`;
+    }
     default:
       return "";
   }

@@ -428,20 +428,11 @@ export const ncaaEspnIds: Record<string, string> = {
   'utah tech': '3101',
   'utep': '2638',
   
-  // Fix name variants
+  // Fix name variants (only entries not already above)
   'maryland-eastern shore': '2379',
   'saint francis (pa)': '2598',
-  'southeast missouri state': '2546',
-  'new hampshire': '2415',
-  'charleston': '232',
-  "mount st. mary's": '116',
-  "saint joseph's": '2603',
-  "saint mary's": '2608',
   "saint peter's": '2612',
   'st. francis brooklyn': '2597',
-  "st. john's": '2599',
-  'uc davis': '302',
-  'wichita state': '2724',
 };
 
 export function getEspnTeamId(city: string): string | null {
