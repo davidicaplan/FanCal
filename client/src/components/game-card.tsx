@@ -42,36 +42,31 @@ function parseGameDateTime(time: string, date: string): Date | null {
     }
   }
   
-  // ESPN provides times in Eastern Time
-  // Parse as Eastern Time and convert to UTC
-  // For dates in Standard Time (Nov-Mar): ET = UTC-5
-  // For dates in Daylight Time (Mar-Nov): ET = UTC-4
+  // ESPN API already provides times in Pacific Time (America/Los_Angeles)
+  // Convert from PT to UTC for iCal
+  // For dates in Standard Time (Nov-Mar): PT = UTC-8
+  // For dates in Daylight Time (Mar-Nov): PT = UTC-7
   
-  // Parse the date to check if DST is in effect
   const [year, month, day] = date.split("-").map(Number);
   
-  // Create a Date object to check DST status for Eastern Time
   // US DST: Second Sunday in March to First Sunday in November
   const isDST = (() => {
-    // Approximate DST check for US Eastern Time
     if (month > 3 && month < 11) return true;
     if (month < 3 || month > 11) return false;
     if (month === 3) {
-      // Second Sunday in March - DST starts
       const firstDay = new Date(year, 2, 1).getDay();
       const secondSunday = 8 + (7 - firstDay) % 7;
       return day >= secondSunday;
     }
-    // First Sunday in November - DST ends
     const firstDay = new Date(year, 10, 1).getDay();
     const firstSunday = 1 + (7 - firstDay) % 7;
     return day < firstSunday;
   })();
   
-  const etOffset = isDST ? -4 : -5; // EDT is UTC-4, EST is UTC-5
+  const ptOffset = isDST ? -7 : -8; // PDT is UTC-7, PST is UTC-8
   
-  // Create UTC time from Eastern Time
-  const utcHours = hours - etOffset;
+  // Create UTC time from Pacific Time
+  const utcHours = hours - ptOffset;
   const utcDate = new Date(Date.UTC(year, month - 1, day, utcHours, minutes, 0));
   
   return utcDate;
@@ -130,21 +125,14 @@ function downloadICS(game: Game, homeTeamFullName: string, awayTeamFullName: str
   return true;
 }
 
-function convertTimeToPST(time: string, date: string): string {
+function convertTimeToPST(time: string, _date: string): string {
   if (!isValidGameTime(time)) {
     return time; // Return original if TBD or invalid
   }
   
-  try {
-    const gameDateTime = parseGameDateTime(time, date);
-    if (!gameDateTime) return time;
-    
-    // Format in PST
-    return formatInTimeZone(gameDateTime, PST_TIMEZONE, "h:mm a") + " PST";
-  } catch {
-    // If parsing fails, return original time
-    return time;
-  }
+  // ESPN API already returns times in PST (America/Los_Angeles timezone)
+  // Just append "PST" label to the existing time
+  return time + " PST";
 }
 
 export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {

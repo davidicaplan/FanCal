@@ -69,8 +69,8 @@ function parseGameDateTime(time: string, date: string): Date | null {
     }
   }
   
-  // ESPN provides times in Eastern Time
-  // Parse the date to check if DST is in effect
+  // ESPN API already provides times in Pacific Time (America/Los_Angeles)
+  // Convert from PT to UTC for iCal
   const [year, month, day] = date.split("-").map(Number);
   
   // US DST: Second Sunday in March to First Sunday in November
@@ -87,10 +87,10 @@ function parseGameDateTime(time: string, date: string): Date | null {
     return day < firstSunday;
   })();
   
-  const etOffset = isDST ? -4 : -5; // EDT is UTC-4, EST is UTC-5
+  const ptOffset = isDST ? -7 : -8; // PDT is UTC-7, PST is UTC-8
   
-  // Create UTC time from Eastern Time
-  const utcHours = hours - etOffset;
+  // Create UTC time from Pacific Time
+  const utcHours = hours - ptOffset;
   const utcDate = new Date(Date.UTC(year, month - 1, day, utcHours, minutes, 0));
   
   return utcDate;
