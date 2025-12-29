@@ -9,15 +9,21 @@ interface LeagueCardProps {
   onClick: () => void;
 }
 
-const leagueIcons: Record<string, string> = {
-  nba: "🏀",
-  nfl: "🏈",
-  mlb: "⚾",
-  nhl: "🏒",
-  "ncaa-football": "🏈",
-  "ncaa-basketball": "🏀",
-  "premier-league": "⚽",
-  "la-liga": "⚽",
+const leagueLogos: Record<string, string> = {
+  nba: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nba.png",
+  nfl: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nfl.png",
+  mlb: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mlb.png",
+  nhl: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png",
+  wnba: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/wnba.png",
+  mls: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mls.png",
+  "ncaa-football": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/ncaa.png",
+  "ncaa-basketball": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/ncaa.png",
+  "ncaa-womens-basketball": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/ncaa.png",
+  "premier-league": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/23.png",
+  "la-liga": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/15.png",
+  "bundesliga": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/10.png",
+  "serie-a": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/12.png",
+  "ligue-1": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/9.png",
 };
 
 export function LeagueCard({ league, onClick }: LeagueCardProps) {
@@ -35,14 +41,22 @@ export function LeagueCard({ league, onClick }: LeagueCardProps) {
     >
       <div className="flex items-center gap-4">
         <div
-          className="flex items-center justify-center w-16 h-16 rounded-md text-3xl"
+          className="flex items-center justify-center w-16 h-16 rounded-md overflow-hidden"
           style={{ backgroundColor: `${league.color}15` }}
         >
-          <span className="select-none" aria-hidden="true" style={{ color: league.color, fontFamily: 'system-ui' }}>
-            {league.shortName.charAt(0)}
-          </span>
+          {leagueLogos[league.id] ? (
+            <img
+              src={leagueLogos[league.id]}
+              alt={league.name}
+              className="w-12 h-12 object-contain"
+            />
+          ) : (
+            <span className="select-none text-3xl" aria-hidden="true" style={{ color: league.color, fontFamily: 'system-ui' }}>
+              {league.shortName.charAt(0)}
+            </span>
+          )}
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-lg truncate" data-testid={`text-league-name-${league.id}`}>
             {league.name}
