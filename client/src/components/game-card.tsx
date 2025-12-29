@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock } from "lucide-react";
+import { TeamLogo } from "@/components/team-logo";
 import type { Game, Team, League } from "@shared/schema";
 import { format, parseISO } from "date-fns";
 
@@ -16,8 +17,6 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
   const awayTeamName = awayTeam?.name || game.awayTeamName || "Away Team";
   const homeTeamCity = homeTeam?.city || "";
   const awayTeamCity = awayTeam?.city || "";
-  const homeAbbr = homeTeam?.abbreviation?.slice(0, 2) || homeTeamName.slice(0, 2).toUpperCase();
-  const awayAbbr = awayTeam?.abbreviation?.slice(0, 2) || awayTeamName.slice(0, 2).toUpperCase();
   const gameDate = parseISO(game.date);
   const isToday = format(new Date(), "yyyy-MM-dd") === game.date;
   const isTomorrow = format(new Date(Date.now() + 86400000), "yyyy-MM-dd") === game.date;
@@ -48,15 +47,26 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
         </div>
 
         <div className="flex items-center justify-center gap-4">
-          <div className="flex-1 text-right">
-            <div
-              className="inline-flex items-center justify-center w-12 h-12 rounded-md text-lg font-bold mb-2"
-              style={{ backgroundColor: `${league.color}15`, color: league.color }}
-            >
-              {awayAbbr}
+          <div className="flex-1 flex flex-col items-end">
+            <div className="mb-2">
+              {awayTeam ? (
+                <TeamLogo 
+                  team={awayTeam} 
+                  leagueId={league.id} 
+                  size="md" 
+                  leagueColor={league.color} 
+                />
+              ) : (
+                <div
+                  className="w-12 h-12 flex items-center justify-center rounded-md text-lg font-bold"
+                  style={{ backgroundColor: `${league.color}15`, color: league.color }}
+                >
+                  {(game.awayTeamName || "Away").slice(0, 2).toUpperCase()}
+                </div>
+              )}
             </div>
-            <p className="font-medium truncate" data-testid={`text-away-team-${game.id}`}>{awayTeamName}</p>
-            {awayTeamCity && <p className="text-sm text-muted-foreground">{awayTeamCity}</p>}
+            {awayTeamCity && <p className="text-sm text-muted-foreground text-right">{awayTeamCity}</p>}
+            <p className="font-medium truncate text-right" data-testid={`text-away-team-${game.id}`}>{awayTeamName}</p>
           </div>
 
           <div className="flex flex-col items-center px-4">
@@ -77,15 +87,26 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
             )}
           </div>
 
-          <div className="flex-1 text-left">
-            <div
-              className="inline-flex items-center justify-center w-12 h-12 rounded-md text-lg font-bold mb-2"
-              style={{ backgroundColor: `${league.color}15`, color: league.color }}
-            >
-              {homeAbbr}
+          <div className="flex-1 flex flex-col items-start">
+            <div className="mb-2">
+              {homeTeam ? (
+                <TeamLogo 
+                  team={homeTeam} 
+                  leagueId={league.id} 
+                  size="md" 
+                  leagueColor={league.color} 
+                />
+              ) : (
+                <div
+                  className="w-12 h-12 flex items-center justify-center rounded-md text-lg font-bold"
+                  style={{ backgroundColor: `${league.color}15`, color: league.color }}
+                >
+                  {(game.homeTeamName || "Home").slice(0, 2).toUpperCase()}
+                </div>
+              )}
             </div>
-            <p className="font-medium truncate" data-testid={`text-home-team-${game.id}`}>{homeTeamName}</p>
             {homeTeamCity && <p className="text-sm text-muted-foreground">{homeTeamCity}</p>}
+            <p className="font-medium truncate" data-testid={`text-home-team-${game.id}`}>{homeTeamName}</p>
           </div>
         </div>
 
