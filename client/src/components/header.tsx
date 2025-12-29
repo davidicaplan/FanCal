@@ -23,6 +23,7 @@ export function Header() {
   const totalTeams = getTotalSelectedTeams();
 
   const isOnTeamSelection = location === "/" || location.startsWith("/teams");
+  const isOnGamesPage = location === "/games" || location.startsWith("/games");
 
   const navItems = [
     { path: "/", label: "Teams", icon: Trophy },
@@ -76,10 +77,17 @@ export function Header() {
                 <span>Select Teams</span>
               </Link>
             )}
-            <Link href="/games" className="flex items-center gap-1.5 px-2.5 py-2 bg-emerald-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2" data-testid="link-upcoming-games">
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Upcoming Games</span>
-            </Link>
+            {isOnGamesPage ? (
+              <Link href="/calendar" className="flex items-center gap-1.5 px-2.5 py-2 bg-emerald-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2" data-testid="link-view-calendar-green">
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>View Calendar</span>
+              </Link>
+            ) : (
+              <Link href="/games" className="flex items-center gap-1.5 px-2.5 py-2 bg-emerald-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2" data-testid="link-upcoming-games">
+                <List className="w-3.5 h-3.5" />
+                <span>Upcoming Games</span>
+              </Link>
+            )}
           </div>
 
           <nav className="hidden md:flex items-center gap-1">
