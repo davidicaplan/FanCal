@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Clock, CalendarPlus } from "lucide-react";
 import { TeamLogo } from "@/components/team-logo";
 import type { Game, Team, League } from "@shared/schema";
 import { format, parseISO } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, toZonedTime } from "date-fns-tz";
 
 interface GameCardProps {
   game: Game;
@@ -14,25 +15,109 @@ interface GameCardProps {
 }
 
 const PST_TIMEZONE = "America/Los_Angeles";
+const ET_TIMEZONE = "America/New_York";
+
+function isValidGameTime(time: string): boolean {
+  if (!time || time.toUpperCase() === "TBD" || time.toUpperCase() === "TBA") {
+    return false;
+  }
+  const [timePart] = time.split(" ");
+  const parts = timePart.split(":");
+  if (parts.length !== 2) return false;
+  const [hours, minutes] = parts.map(Number);
+  return !isNaN(hours) && !isNaN(minutes) && hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
+
+function parseGameDateTime(time: string, date: string): Date | null {
+  if (!isValidGameTime(time)) return null;
+  
+  const [timePart, period] = time.split(" ");
+  let [hours, minutes] = timePart.split(":").map(Number);
+  
+  if (period) {
+    if (period.toUpperCase() === "PM" && hours !== 12) {
+      hours += 12;
+    } else if (period.toUpperCase() === "AM" && hours === 12) {
+      hours = 0;
+    }
+  }
+  
+  // Create date string and parse as Eastern Time (handles DST automatically)
+  const dateTimeStr = `${date}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
+  try {
+    // Parse the date-time string as if it's in Eastern Time zone
+    // First create a Date from the string, then use toZonedTime to get the correct UTC time
+    const localDate = new Date(dateTimeStr);
+    // Calculate offset between local interpretation and Eastern Time
+    const etDate = toZonedTime(localDate, ET_TIMEZONE);
+    const offset = localDate.getTime() - etDate.getTime();
+    return new Date(localDate.getTime() + offset);
+  } catch {
+    return null;
+  }
+}
+
+function formatICSDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+}
+
+function generateICS(game: Game, homeTeamFullName: string, awayTeamFullName: string, venue: string): string | null {
+  const gameDateTime = parseGameDateTime(game.time, game.date);
+  if (!gameDateTime) return null;
+  
+  const endDateTime = new Date(gameDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+  
+  const title = `${awayTeamFullName} @ ${homeTeamFullName}`;
+  const description = game.broadcast ? `Watch on: ${game.broadcast}` : "";
+  
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//FanCal//Sports Calendar//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${game.id}@fancal.app`,
+    `DTSTAMP:${formatICSDate(new Date())}`,
+    `DTSTART:${formatICSDate(gameDateTime)}`,
+    `DTEND:${formatICSDate(endDateTime)}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description}`,
+    `LOCATION:${venue}`,
+    "STATUS:CONFIRMED",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  
+  return icsContent;
+}
+
+function downloadICS(game: Game, homeTeamFullName: string, awayTeamFullName: string, venue: string): boolean {
+  const icsContent = generateICS(game, homeTeamFullName, awayTeamFullName, venue);
+  if (!icsContent) return false;
+  
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${awayTeamFullName.replace(/\s+/g, "-")}-at-${homeTeamFullName.replace(/\s+/g, "-")}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  URL.revokeObjectURL(url);
+  return true;
+}
 
 function convertTimeToPST(time: string, date: string): string {
+  if (!isValidGameTime(time)) {
+    return time; // Return original if TBD or invalid
+  }
+  
   try {
-    // Parse the time (assumed to be in format like "7:00 PM" or "19:00")
-    const [timePart, period] = time.split(" ");
-    let [hours, minutes] = timePart.split(":").map(Number);
-    
-    // Convert to 24-hour format if AM/PM
-    if (period) {
-      if (period.toUpperCase() === "PM" && hours !== 12) {
-        hours += 12;
-      } else if (period.toUpperCase() === "AM" && hours === 12) {
-        hours = 0;
-      }
-    }
-    
-    // Create a date object with the game date and time
-    // ESPN times are typically in Eastern Time
-    const gameDateTime = new Date(`${date}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00-05:00`);
+    const gameDateTime = parseGameDateTime(time, date);
+    if (!gameDateTime) return time;
     
     // Format in PST
     return formatInTimeZone(gameDateTime, PST_TIMEZONE, "h:mm a") + " PST";
@@ -53,8 +138,10 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
   const awayTeamCity = awayTeam?.city || "";
   const gameDate = parseISO(game.date);
   const gamePSTTime = convertTimeToPST(game.time, game.date);
+  const canExportToCalendar = game.status !== "final" && isValidGameTime(game.time);
   const isToday = format(new Date(), "yyyy-MM-dd") === game.date;
   const isTomorrow = format(new Date(Date.now() + 86400000), "yyyy-MM-dd") === game.date;
+  const showFooter = game.venue || game.broadcast || canExportToCalendar;
 
   const getDateLabel = () => {
     if (isToday) return "Today";
@@ -145,7 +232,7 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
           </div>
         </div>
 
-        {(game.venue || game.broadcast) && (
+        {showFooter && (
           <div className="flex items-center gap-3 text-xs text-muted-foreground justify-center pt-2 border-t flex-wrap">
             {game.venue && (
               <div className="flex items-center gap-1">
@@ -157,6 +244,18 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
               <Badge variant="outline" className="text-xs">
                 {game.broadcast}
               </Badge>
+            )}
+            {canExportToCalendar && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-xs h-7"
+                onClick={() => downloadICS(game, homeTeamFullName, awayTeamFullName, game.venue || "")}
+                data-testid={`button-add-calendar-${game.id}`}
+              >
+                <CalendarPlus className="w-3 h-3" />
+                Add to Calendar
+              </Button>
             )}
           </div>
         )}
