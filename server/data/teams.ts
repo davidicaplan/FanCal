@@ -910,11 +910,11 @@ export const teamsData: Team[] = [
 export function getTeamsByLeague(leagueId: string): Team[] {
   return teamsData
     .filter((team) => team.leagueId === leagueId)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.city.localeCompare(b.city));
 }
 
 export function getAllTeams(): Team[] {
-  return teamsData.sort((a, b) => a.name.localeCompare(b.name));
+  return teamsData.sort((a, b) => a.city.localeCompare(b.city));
 }
 
 export function getTeamById(teamId: string): Team | undefined {
@@ -924,7 +924,7 @@ export function getTeamById(teamId: string): Team | undefined {
 export function getTeamsByConference(leagueId: string, conference: string): Team[] {
   return teamsData
     .filter((team) => team.leagueId === leagueId && team.conference === conference)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.city.localeCompare(b.city));
 }
 
 export function getConferencesForLeague(leagueId: string): string[] {

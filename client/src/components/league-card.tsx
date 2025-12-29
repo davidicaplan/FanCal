@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronRight } from "lucide-react";
 import type { League } from "@shared/schema";
 import { useTeamSelection } from "@/lib/team-selection-context";
+import ncaaLogo from "@assets/IMG_8882_1766993283509.png";
 
 interface LeagueCardProps {
   league: League;
@@ -16,9 +17,9 @@ const leagueLogos: Record<string, string> = {
   nhl: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/nhl.png",
   wnba: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/wnba.png",
   mls: "https://a.espncdn.com/combiner/i?img=/i/teamlogos/leagues/500/mls.png",
-  "ncaa-football": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/ncaa.png",
-  "ncaa-basketball": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/ncaa.png",
-  "ncaa-womens-basketball": "https://a.espncdn.com/combiner/i?img=/i/teamlogos/ncaa/500/ncaa.png",
+  "ncaa-football": ncaaLogo,
+  "ncaa-basketball": ncaaLogo,
+  "ncaa-womens-basketball": ncaaLogo,
   "premier-league": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/23.png",
   "la-liga": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/15.png",
   "bundesliga": "https://a.espncdn.com/combiner/i?img=/i/leaguelogos/soccer/500/10.png",
