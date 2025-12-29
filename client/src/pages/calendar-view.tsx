@@ -333,7 +333,7 @@ export default function CalendarView() {
               data-testid="button-add-to-calendar"
             >
               <CalendarPlus className="w-3.5 h-3.5" />
-              <span>Add to Calendar</span>
+              <span>Add to iCalendar</span>
             </button>
           </div>
           <p className="text-muted-foreground">
@@ -516,7 +516,7 @@ export default function CalendarView() {
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle data-testid="dialog-export-title">Add to Calendar</DialogTitle>
+            <DialogTitle data-testid="dialog-export-title">Add to iCalendar</DialogTitle>
             <DialogDescription>
               Export {teamFilter === "all" ? "all your teams'" : (savedTeamsList.find(t => t.id === teamFilter)?.name || "selected team's")} games to your calendar app.
             </DialogDescription>

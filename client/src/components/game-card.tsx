@@ -262,7 +262,7 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
                 data-testid={`button-add-calendar-${game.id}`}
               >
                 <CalendarPlus className="w-3 h-3" />
-                Add to Calendar
+                Add to iCalendar
               </Button>
             )}
           </div>
