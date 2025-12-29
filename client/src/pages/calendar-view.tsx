@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
 import { useTeamSelection } from "@/lib/team-selection-context";
 import { leagues, type Game, type Team } from "@shared/schema";
-import { ChevronLeft, ChevronRight, CalendarDays, List, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, List, Users, CalendarPlus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -28,22 +28,74 @@ import {
   subMonths,
   parseISO,
   isToday,
+  addDays,
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { GameCard } from "@/components/game-card";
 
 type ViewMode = "month" | "week";
+
+const ET_TIMEZONE = "America/New_York";
+
+function isValidGameTime(time: string): boolean {
+  if (!time || time.toUpperCase() === "TBD" || time.toUpperCase() === "TBA") {
+    return false;
+  }
+  const [timePart] = time.split(" ");
+  const parts = timePart.split(":");
+  if (parts.length !== 2) return false;
+  const [hours, minutes] = parts.map(Number);
+  return !isNaN(hours) && !isNaN(minutes) && hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
+
+function parseGameDateTime(time: string, date: string): Date | null {
+  if (!isValidGameTime(time)) return null;
+  
+  const [timePart, period] = time.split(" ");
+  let [hours, minutes] = timePart.split(":").map(Number);
+  
+  if (period) {
+    if (period.toUpperCase() === "PM" && hours !== 12) {
+      hours += 12;
+    } else if (period.toUpperCase() === "AM" && hours === 12) {
+      hours = 0;
+    }
+  }
+  
+  const dateTimeStr = `${date}T${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
+  try {
+    const localDate = new Date(dateTimeStr);
+    const etDate = toZonedTime(localDate, ET_TIMEZONE);
+    const offset = localDate.getTime() - etDate.getTime();
+    return new Date(localDate.getTime() + offset);
+  } catch {
+    return null;
+  }
+}
+
+function formatICSDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+}
 
 export default function CalendarView() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [teamFilter, setTeamFilter] = useState<string>("all");
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportRangeType, setExportRangeType] = useState<"all" | "range">("all");
+  const [exportStartDate, setExportStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [exportEndDate, setExportEndDate] = useState(format(addDays(new Date(), 30), "yyyy-MM-dd"));
 
   const { selectedTeams, leagueVisibility, getTotalSelectedTeams } = useTeamSelection();
   const totalSelected = getTotalSelectedTeams();
@@ -166,6 +218,79 @@ export default function CalendarView() {
     setCurrentDate(new Date());
   };
 
+  const handleExportToCalendar = () => {
+    // Get games to export based on current filter and date range
+    let gamesToExport = filteredGames.filter((game) => {
+      // Only export games with valid times (not TBD)
+      if (!isValidGameTime(game.time)) return false;
+      // Only export non-final games
+      if (game.status === "final") return false;
+      
+      // Filter by date range if specified
+      if (exportRangeType === "range") {
+        const gameDate = game.date;
+        return gameDate >= exportStartDate && gameDate <= exportEndDate;
+      }
+      return true;
+    });
+
+    if (gamesToExport.length === 0) {
+      setExportDialogOpen(false);
+      return;
+    }
+
+    // Generate combined ICS file
+    const events = gamesToExport.map((game) => {
+      const gameDateTime = parseGameDateTime(game.time, game.date);
+      if (!gameDateTime) return null;
+      
+      const endDateTime = new Date(gameDateTime.getTime() + 3 * 60 * 60 * 1000);
+      const homeTeam = teamMap.get(game.homeTeamId);
+      const awayTeam = teamMap.get(game.awayTeamId);
+      const homeTeamName = homeTeam?.name || game.homeTeamName || "Home Team";
+      const awayTeamName = awayTeam?.name || game.awayTeamName || "Away Team";
+      const title = `${awayTeamName} @ ${homeTeamName}`;
+      const description = game.broadcast ? `Watch on: ${game.broadcast}` : "";
+      
+      return [
+        "BEGIN:VEVENT",
+        `UID:${game.id}@fancal.app`,
+        `DTSTAMP:${formatICSDate(new Date())}`,
+        `DTSTART:${formatICSDate(gameDateTime)}`,
+        `DTEND:${formatICSDate(endDateTime)}`,
+        `SUMMARY:${title}`,
+        `DESCRIPTION:${description}`,
+        `LOCATION:${game.venue || ""}`,
+        "STATUS:CONFIRMED",
+        "END:VEVENT",
+      ].join("\r\n");
+    }).filter(Boolean);
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//FanCal//Sports Calendar//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      ...events,
+      "END:VCALENDAR",
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    const filterLabel = teamFilter === "all" ? "all-teams" : (savedTeamsList.find(t => t.id === teamFilter)?.name || "team").replace(/\s+/g, "-");
+    link.download = `fancal-${filterLabel}-schedule.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    URL.revokeObjectURL(url);
+    setExportDialogOpen(false);
+  };
+
   if (totalSelected === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
@@ -178,9 +303,19 @@ export default function CalendarView() {
     <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-semibold" data-testid="text-calendar-title">
-            My Calendar
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl font-semibold" data-testid="text-calendar-title">
+              My Calendar
+            </h1>
+            <button
+              onClick={() => setExportDialogOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-2 bg-red-600 text-white rounded-md font-medium text-xs hover-elevate active-elevate-2"
+              data-testid="button-add-to-calendar"
+            >
+              <CalendarPlus className="w-3.5 h-3.5" />
+              <span>Add to Calendar</span>
+            </button>
+          </div>
           <p className="text-muted-foreground">
             {filteredGames.length} game{filteredGames.length !== 1 ? "s" : ""} scheduled
           </p>
@@ -355,6 +490,81 @@ export default function CalendarView() {
               })
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-export-title">Add to Calendar</DialogTitle>
+            <DialogDescription>
+              Export {teamFilter === "all" ? "all your teams'" : (savedTeamsList.find(t => t.id === teamFilter)?.name || "selected team's")} games to your calendar app.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-3">
+              <Label className="text-base font-medium">Date Range</Label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="exportRange"
+                    value="all"
+                    checked={exportRangeType === "all"}
+                    onChange={() => setExportRangeType("all")}
+                    className="w-4 h-4"
+                    data-testid="radio-all-dates"
+                  />
+                  <span>All upcoming games</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="exportRange"
+                    value="range"
+                    checked={exportRangeType === "range"}
+                    onChange={() => setExportRangeType("range")}
+                    className="w-4 h-4"
+                    data-testid="radio-date-range"
+                  />
+                  <span>Select date range</span>
+                </label>
+              </div>
+            </div>
+            
+            {exportRangeType === "range" && (
+              <div className="grid grid-cols-2 gap-4 pl-6">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={exportStartDate}
+                    onChange={(e) => setExportStartDate(e.target.value)}
+                    data-testid="input-start-date"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={exportEndDate}
+                    onChange={(e) => setExportEndDate(e.target.value)}
+                    data-testid="input-end-date"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExportDialogOpen(false)} data-testid="button-cancel-export">
+              Cancel
+            </Button>
+            <Button onClick={handleExportToCalendar} data-testid="button-confirm-export">
+              Export
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
