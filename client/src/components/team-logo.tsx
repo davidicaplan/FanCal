@@ -3,6 +3,7 @@ import footballIcon from "@assets/IMG_8879_1766992529055.jpeg";
 import basketballIcon from "@assets/IMG_8880_1766992529055.jpeg";
 import { getEspnTeamId } from "@/lib/espn-team-ids";
 import { getSoccerEspnTeamId } from "@/lib/soccer-team-ids";
+import { getMlsEspnTeamId } from "@/lib/mls-team-ids";
 
 interface TeamLogoProps {
   team: {
@@ -30,8 +31,13 @@ function getTeamLogoUrl(team: { abbreviation: string; city?: string }, leagueId:
       return `https://a.espncdn.com/i/teamlogos/nhl/500/${abbr}.png`;
     case "wnba":
       return `https://a.espncdn.com/i/teamlogos/wnba/500/${abbr}.png`;
-    case "mls":
+    case "mls": {
+      const mlsId = getMlsEspnTeamId(abbr);
+      if (mlsId) {
+        return `https://a.espncdn.com/i/teamlogos/soccer/500/${mlsId}.png`;
+      }
       return `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/${abbr}.png&h=80&w=80`;
+    }
     case "ncaa-football":
     case "ncaa-basketball":
     case "ncaa-womens-basketball": {

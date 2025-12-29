@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { TeamSelectionProvider } from "@/lib/team-selection-context";
 import { Header } from "@/components/header";
+import { PWAInstallBanner } from "@/components/pwa-install-banner";
 import Home from "@/pages/home";
 import TeamSelection from "@/pages/team-selection";
 import CalendarView from "@/pages/calendar-view";
@@ -37,6 +38,7 @@ function App() {
               <main>
                 <Router />
               </main>
+              <PWAInstallBanner />
             </div>
             <Toaster />
           </TooltipProvider>
