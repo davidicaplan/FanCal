@@ -58,7 +58,14 @@ export default function GamesList() {
         });
       }
     });
-    return teamList.sort((a, b) => `${a.city} ${a.name}`.localeCompare(`${b.city} ${b.name}`));
+    // Sort alphabetically by full display text (city + name + league)
+    return teamList.sort((a, b) => {
+      const aLeague = leagues.find(l => l.id === a.leagueId);
+      const bLeague = leagues.find(l => l.id === b.leagueId);
+      const aDisplay = `${a.city} ${a.name} (${aLeague?.shortName || ''})`;
+      const bDisplay = `${b.city} ${b.name} (${bLeague?.shortName || ''})`;
+      return aDisplay.localeCompare(bDisplay);
+    });
   }, [selectedTeams, leagueVisibility, teams]);
 
   // Build a set of ESPN-style team IDs from selected teams
