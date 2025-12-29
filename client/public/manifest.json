@@ -1,7 +1,7 @@
 {
-  "name": "Sports Calendar - Track Your Teams",
-  "short_name": "Sports Calendar",
-  "description": "Track all your favorite sports teams in one unified calendar. Follow NBA, NFL, MLB, NHL, NCAA, Premier League, La Liga, Bundesliga, Serie A, and Ligue 1 games.",
+  "name": "FanCal",
+  "short_name": "FanCal",
+  "description": "Track all your favorite sports teams in one unified calendar. Follow NBA, NFL, MLB, NHL, WNBA, MLS, NCAA, Premier League, La Liga, Bundesliga, Serie A, and Ligue 1 games.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
