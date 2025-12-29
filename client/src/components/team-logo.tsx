@@ -4,6 +4,7 @@ import basketballIcon from "@assets/IMG_8880_1766992529055.jpeg";
 import { getEspnTeamId } from "@/lib/espn-team-ids";
 import { getSoccerEspnTeamId } from "@/lib/soccer-team-ids";
 import { getMlsEspnTeamId } from "@/lib/mls-team-ids";
+import { getNbaLogoId, getNhlLogoId } from "@/lib/pro-team-logo-ids";
 
 interface TeamLogoProps {
   team: {
@@ -21,14 +22,18 @@ function getTeamLogoUrl(team: { abbreviation: string; city?: string }, leagueId:
   const abbr = team.abbreviation.toLowerCase();
   
   switch (leagueId) {
-    case "nba":
-      return `https://a.espncdn.com/i/teamlogos/nba/500/${abbr}.png`;
+    case "nba": {
+      const nbaId = getNbaLogoId(abbr);
+      return `https://a.espncdn.com/i/teamlogos/nba/500/${nbaId}.png`;
+    }
     case "nfl":
       return `https://a.espncdn.com/i/teamlogos/nfl/500/${abbr}.png`;
     case "mlb":
       return `https://a.espncdn.com/i/teamlogos/mlb/500/${abbr}.png`;
-    case "nhl":
-      return `https://a.espncdn.com/i/teamlogos/nhl/500/${abbr}.png`;
+    case "nhl": {
+      const nhlId = getNhlLogoId(abbr);
+      return `https://a.espncdn.com/i/teamlogos/nhl/500/${nhlId}.png`;
+    }
     case "wnba":
       return `https://a.espncdn.com/i/teamlogos/wnba/500/${abbr}.png`;
     case "mls": {
