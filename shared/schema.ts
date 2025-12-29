@@ -40,6 +40,7 @@ export const teamSchema = z.object({
   leagueId: z.enum(leagueIds),
   conference: z.string().optional(),
   division: z.string().optional(),
+  espnTeamId: z.string().optional(),
 });
 
 export type Team = z.infer<typeof teamSchema>;

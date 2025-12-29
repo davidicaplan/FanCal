@@ -1,11 +1,13 @@
 import { useState } from "react";
 import footballIcon from "@assets/IMG_8879_1766992529055.jpeg";
 import basketballIcon from "@assets/IMG_8880_1766992529055.jpeg";
+import { getEspnTeamId } from "@/lib/espn-team-ids";
 
 interface TeamLogoProps {
   team: {
     abbreviation: string;
     name?: string;
+    city?: string;
     leagueId?: string;
   };
   leagueId: string;
@@ -13,8 +15,8 @@ interface TeamLogoProps {
   leagueColor?: string;
 }
 
-function getTeamLogoUrl(abbreviation: string, leagueId: string): string {
-  const abbr = abbreviation.toLowerCase();
+function getTeamLogoUrl(team: { abbreviation: string; city?: string }, leagueId: string): string {
+  const abbr = team.abbreviation.toLowerCase();
   
   switch (leagueId) {
     case "nba":
@@ -31,8 +33,13 @@ function getTeamLogoUrl(abbreviation: string, leagueId: string): string {
       return `https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/${abbr}.png&h=80&w=80`;
     case "ncaa-football":
     case "ncaa-basketball":
-    case "ncaa-womens-basketball":
-      return `https://a.espncdn.com/i/teamlogos/ncaa/500/${abbr}.png`;
+    case "ncaa-womens-basketball": {
+      const espnId = team.city ? getEspnTeamId(team.city) : null;
+      if (espnId) {
+        return `https://a.espncdn.com/i/teamlogos/ncaa/500/${espnId}.png`;
+      }
+      return "";
+    }
     case "premier-league":
     case "la-liga":
     case "bundesliga":
@@ -62,7 +69,7 @@ const sizeClasses = {
 
 export function TeamLogo({ team, leagueId, size = "md", leagueColor }: TeamLogoProps) {
   const [imageError, setImageError] = useState(false);
-  const logoUrl = getTeamLogoUrl(team.abbreviation, leagueId);
+  const logoUrl = getTeamLogoUrl(team, leagueId);
   const fallbackIcon = getFallbackIcon(leagueId);
   const sizeClass = sizeClasses[size];
   
