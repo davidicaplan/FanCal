@@ -1,7 +1,7 @@
-# FanCal v1.4
+# FanCal v1.5
 
 ## Overview
-A Progressive Web App for tracking favorite teams across 14 major leagues: NBA, NFL, MLB, NHL, WNBA, MLS, NCAA Football (all 130 FBS programs), NCAA Men's Basketball (360 Division I teams), NCAA Women's Basketball (major Division I conferences), Premier League, La Liga, Bundesliga, Serie A, and Ligue 1. Features multi-user support via Replit Auth.
+A Progressive Web App for tracking favorite teams across 14 major leagues: NBA, NFL, MLB, NHL, WNBA, MLS, NCAA Football (all 130 FBS programs), NCAA Men's Basketball (360 Division I teams), NCAA Women's Basketball (ALL 364 Division I teams across 31 conferences), Premier League, La Liga, Bundesliga, Serie A, and Ligue 1. Features multi-user support via Replit Auth, team-specific logos on all pages, and dynamic header navigation.
 
 ## Tech Stack
 - **Frontend**: React + TypeScript + Vite + TailwindCSS + shadcn/ui
@@ -127,6 +127,12 @@ The app is a Progressive Web App (PWA) that can be installed on mobile devices:
 - **Standalone Mode**: Runs in fullscreen without browser chrome when installed
 
 ## Recent Changes
+- v1.5: Team logos on all pages and expanded NCAA Women's Basketball
+  - Team logos now display on calendar and games list pages (not just team selection)
+  - NCAA Women's Basketball expanded to ALL 364 Division I teams across 31 conferences
+  - Added ESPN numeric IDs for all 5 international soccer leagues
+  - Header navigation toggle: calendar icon on leagues page links to calendar, trophy icon on other pages links back to leagues
+  - Fixed team lookup mapping to correctly match ESPN-style team IDs
 - v1.4: Rebranded to FanCal and expanded to 14 leagues
   - App renamed from "Sports Calendar" to "FanCal"
   - PWA name simplified to "FanCal" for clean home screen display

@@ -56,9 +56,13 @@ export default function CalendarView() {
     queryKey: [`/api/teams/all`],
   });
 
+  // Map teams by ESPN-style ID (leagueId-abbreviation) to match game team IDs
   const teamMap = useMemo(() => {
     const map = new Map<string, Team>();
-    teams.forEach((team) => map.set(team.id, team));
+    teams.forEach((team) => {
+      const espnId = `${team.leagueId}-${team.abbreviation.toLowerCase()}`;
+      map.set(espnId, team);
+    });
     return map;
   }, [teams]);
 

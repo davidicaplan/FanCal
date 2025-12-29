@@ -65,14 +65,25 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground">
-              <CalendarDays className="w-5 h-5" />
-            </div>
-            <span className="font-semibold text-lg hidden sm:inline" data-testid="text-app-name">
-              Sports Calendar
-            </span>
-          </Link>
+          {location === "/" ? (
+            <Link href="/calendar" className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground">
+                <CalendarDays className="w-5 h-5" />
+              </div>
+              <span className="font-semibold text-lg hidden sm:inline" data-testid="text-app-name">
+                FanCal
+              </span>
+            </Link>
+          ) : (
+            <Link href="/" className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary text-primary-foreground">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <span className="font-semibold text-lg hidden sm:inline" data-testid="text-app-name">
+                FanCal
+              </span>
+            </Link>
+          )}
 
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => (

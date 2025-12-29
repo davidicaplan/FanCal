@@ -433,6 +433,20 @@ export const ncaaEspnIds: Record<string, string> = {
   'saint francis (pa)': '2598',
   "saint peter's": '2612',
   'st. francis brooklyn': '2597',
+  
+  // Additional NCAA Women's Basketball teams (non-duplicates)
+  'charleston': '232',
+  'iu indy': '85',
+  'mercyhurst': '2381',
+  'new hampshire': '160',
+  'seattle u': '2547',
+  'st. thomas (mn)': '2900',
+  'texas a&m-commerce': '2628',
+  'uc davis': '302',
+  'ul monroe': '2433',
+  'ut arlington': '250',
+  'utrgv': '292',
+  'west georgia': '2718',
 };
 
 export function getEspnTeamId(city: string): string | null {
