@@ -30,7 +30,7 @@ export default function Login() {
             Sign in to continue
           </Button>
           <p className="mt-4 text-center text-xs text-muted-foreground" data-testid="text-login-providers">
-            Sign in with Google, GitHub, or email
+            Sign in with your account
           </p>
         </CardContent>
       </Card>

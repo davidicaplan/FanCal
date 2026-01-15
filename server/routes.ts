@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { teamsData, getTeamsByLeague } from "./data/teams";
 import { fetchAllGames } from "./services/espn-api";
 import { leagues, userSelections, userSelectionSchema } from "@shared/schema";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 

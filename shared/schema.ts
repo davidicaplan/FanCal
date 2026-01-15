@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Export auth models for Replit Auth integration
+// Export auth models
 export * from "./models/auth";
 
 export const leagueIds = [
