@@ -3,12 +3,12 @@
   "outputDirectory": "dist/public",
   "framework": null,
   "functions": {
-    "dist/api/index.js": {
+    "api/index.mjs": {
       "maxDuration": 30
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/dist/api/index.js" },
+    { "source": "/api/(.*)", "destination": "/api/index.mjs" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
