@@ -15,7 +15,11 @@ export function getSupabaseClient(): SupabaseClient {
       throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY must be set");
     }
 
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        flowType: 'pkce',
+      },
+    });
   }
   return supabase;
 }
@@ -70,6 +74,10 @@ export async function setupAuth(app: Express) {
         provider: "google",
         options: {
           redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
