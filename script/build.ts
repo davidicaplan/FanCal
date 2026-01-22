@@ -62,7 +62,7 @@ async function buildAll() {
 
   console.log("building api serverless function...");
   await esbuild({
-    entryPoints: ["api/index.ts"],
+    entryPoints: ["server/api/index.ts"],
     platform: "node",
     bundle: true,
     format: "esm",

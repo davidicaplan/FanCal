@@ -4,11 +4,11 @@ import { createServer } from "http";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // Import server modules
-import { teamsData, getTeamsByLeague } from "../server/data/teams";
-import { fetchAllGames } from "../server/services/espn-api";
-import { leagues, userSelections, userSelectionSchema } from "../shared/schema";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "../server/auth";
-import { db } from "../server/db";
+import { teamsData, getTeamsByLeague } from "../data/teams";
+import { fetchAllGames } from "../services/espn-api";
+import { leagues, userSelections, userSelectionSchema } from "../../shared/schema";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "../auth";
+import { db } from "../db";
 import { eq } from "drizzle-orm";
 
 const app = express();
