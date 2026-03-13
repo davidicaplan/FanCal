@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { teamsData, getTeamsByLeague } from "./data/teams";
 import { fetchAllGames } from "./services/espn-api";
-import { leagues, userSelections, userSelectionSchema } from "@shared/schema";
+import { fetchOddsForLeague } from "./services/odds-api";
+import { leagues, leagueIds, userSelections, userSelectionSchema } from "@shared/schema";
+import type { LeagueId } from "@shared/schema";
 import { setupAuth, registerAuthRoutes, isAuthenticated } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -76,6 +78,20 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching game:", error);
       res.status(500).json({ error: "Failed to fetch game" });
+    }
+  });
+
+  app.get("/api/odds/:leagueId", async (req, res) => {
+    try {
+      const { leagueId } = req.params;
+      if (!leagueIds.includes(leagueId as LeagueId)) {
+        return res.status(400).json({ error: "Invalid league ID" });
+      }
+      const odds = await fetchOddsForLeague(leagueId as LeagueId);
+      res.json(odds);
+    } catch (error) {
+      console.error("Error fetching odds:", error);
+      res.status(500).json({ error: "Failed to fetch odds" });
     }
   });
 

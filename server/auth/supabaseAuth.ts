@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { Express, RequestHandler } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
+import crypto from "crypto";
 import { authStorage } from "./storage";
 
 let supabase: SupabaseClient;
@@ -15,13 +16,18 @@ export function getSupabaseClient(): SupabaseClient {
       throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY must be set");
     }
 
-    supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        flowType: 'pkce',
-      },
-    });
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
   }
   return supabase;
+}
+
+function generatePKCE() {
+  const verifier = crypto.randomBytes(32).toString("base64url");
+  const challenge = crypto
+    .createHash("sha256")
+    .update(verifier)
+    .digest("base64url");
+  return { verifier, challenge };
 }
 
 export function getSession() {
@@ -40,7 +46,7 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: !!process.env.VERCEL,
       maxAge: sessionTtl,
       sameSite: "lax",
     },
@@ -61,36 +67,35 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
 
-  // Initialize Supabase client
-  getSupabaseClient();
+  const supabaseUrl = process.env.SUPABASE_URL!;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 
-  // Login route - redirects to Supabase OAuth
+  // Login route - constructs OAuth URL manually with PKCE
   app.get("/api/login", async (req, res) => {
     try {
-      const supabase = getSupabaseClient();
+      const { verifier, challenge } = generatePKCE();
+
+      // Store PKCE verifier in session (per-user, not singleton)
+      (req.session as any).codeVerifier = verifier;
+
       const redirectTo = `${req.protocol}://${req.get("host")}/api/callback`;
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const params = new URLSearchParams({
         provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
+        redirect_to: redirectTo,
+        code_challenge: challenge,
+        code_challenge_method: "S256",
       });
 
-      if (error) {
-        console.error("OAuth error:", error);
-        return res.status(500).json({ error: "Failed to initiate login" });
-      }
+      // Save session before redirecting so the cookie is set
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
 
-      if (data.url) {
-        res.redirect(data.url);
-      } else {
-        res.status(500).json({ error: "No redirect URL provided" });
-      }
+      res.redirect(`${supabaseUrl}/auth/v1/authorize?${params}`);
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Failed to initiate login" });
@@ -101,31 +106,66 @@ export async function setupAuth(app: Express) {
   app.get("/api/callback", async (req, res) => {
     try {
       const { code } = req.query;
+      const codeVerifier = (req.session as any)?.codeVerifier;
+
+      console.log("Callback hit - code:", !!code, "verifier:", !!codeVerifier);
 
       if (!code || typeof code !== "string") {
+        console.log("No code in callback");
         return res.redirect("/?error=no_code");
       }
 
-      const supabase = getSupabaseClient();
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!codeVerifier) {
+        console.log("No code verifier in session");
+        return res.redirect("/?error=no_verifier");
+      }
 
-      if (error) {
-        console.error("Session exchange error:", error);
+      // Exchange code for session using Supabase REST API
+      const tokenResponse = await fetch(
+        `${supabaseUrl}/auth/v1/token?grant_type=pkce`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseAnonKey,
+          },
+          body: JSON.stringify({
+            auth_code: code,
+            code_verifier: codeVerifier,
+          }),
+        }
+      );
+
+      const tokenData = await tokenResponse.json();
+
+      if (!tokenResponse.ok || !tokenData.user) {
+        console.error("Token exchange error:", tokenData);
         return res.redirect("/?error=auth_failed");
       }
 
-      if (data.user) {
-        await upsertUser(data.user);
+      console.log("Auth success for:", tokenData.user.email);
 
-        // Store user info in session
-        (req.session as any).user = {
-          id: data.user.id,
-          email: data.user.email,
-          access_token: data.session?.access_token,
-          refresh_token: data.session?.refresh_token,
-          expires_at: data.session?.expires_at,
-        };
-      }
+      // Clean up verifier from session
+      delete (req.session as any).codeVerifier;
+
+      await upsertUser(tokenData.user);
+
+      // Store user info in session
+      (req.session as any).user = {
+        id: tokenData.user.id,
+        email: tokenData.user.email,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: tokenData.expires_at,
+      };
+
+      // Explicitly save session before redirecting
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
 
       res.redirect("/");
     } catch (error) {
@@ -137,9 +177,6 @@ export async function setupAuth(app: Express) {
   // Logout route
   app.get("/api/logout", async (req, res) => {
     try {
-      const supabase = getSupabaseClient();
-      await supabase.auth.signOut();
-
       req.session.destroy((err) => {
         if (err) {
           console.error("Session destroy error:", err);

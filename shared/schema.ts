@@ -87,6 +87,17 @@ export const leagues: League[] = [
   { id: "ligue-1", name: "Ligue 1", shortName: "L1", teamCount: 18, color: "#091C3E" },
 ];
 
+export interface GameOdds {
+  homeTeam: string;
+  awayTeam: string;
+  commenceTime: string;
+  bookmaker: string;
+  moneyline?: { home: number; away: number; draw?: number };
+  spread?: { home: number; homePrice: number; away: number; awayPrice: number };
+  total?: { over: number; overPrice: number; under: number; underPrice: number };
+  lastUpdate: string;
+}
+
 export const insertUserSchema = z.object({
   username: z.string(),
   password: z.string(),

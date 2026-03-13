@@ -1,9 +1,13 @@
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, CalendarPlus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MapPin, Clock, CalendarPlus, TrendingUp, ChevronDown } from "lucide-react";
 import { TeamLogo } from "@/components/team-logo";
-import type { Game, Team, League } from "@shared/schema";
+import { OddsDisplay } from "@/components/odds-display";
+import type { Game, Team, League, GameOdds } from "@shared/schema";
 import { format, parseISO } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 
@@ -135,7 +139,24 @@ function convertTimeToPST(time: string, _date: string): string {
   return time + " PST";
 }
 
+function normalizeTeamName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9\s]/g, "").trim();
+}
+
+function teamNamesMatch(espnName: string, oddsName: string): boolean {
+  const a = normalizeTeamName(espnName);
+  const b = normalizeTeamName(oddsName);
+  if (a === b) return true;
+  if (a.includes(b) || b.includes(a)) return true;
+  // Compare last word (team nickname) as fallback
+  const aLast = a.split(" ").pop() || "";
+  const bLast = b.split(" ").pop() || "";
+  return aLast.length > 2 && aLast === bLast;
+}
+
 export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
+  const [showOdds, setShowOdds] = useState(false);
+
   const homeTeamFullName = homeTeam?.name || game.homeTeamName || "Home Team";
   const awayTeamFullName = awayTeam?.name || game.awayTeamName || "Away Team";
   const homeTeamAbbr = homeTeam?.abbreviation || homeTeamFullName.slice(0, 4).toUpperCase();
@@ -149,7 +170,30 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
   const canExportToCalendar = game.status !== "final" && isValidGameTime(game.time);
   const isToday = format(new Date(), "yyyy-MM-dd") === game.date;
   const isTomorrow = format(new Date(Date.now() + 86400000), "yyyy-MM-dd") === game.date;
-  const showFooter = game.venue || game.broadcast || canExportToCalendar;
+  const showOddsButton = game.status !== "final";
+  const showFooter = game.venue || game.broadcast || canExportToCalendar || showOddsButton;
+
+  const { data: leagueOdds, isLoading: oddsLoading } = useQuery<GameOdds[]>({
+    queryKey: [`/api/odds/${game.leagueId}`],
+    enabled: showOdds,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const gameOdds = useMemo(() => {
+    if (!leagueOdds) return null;
+    const espnHome = game.homeTeamName || "";
+    const espnAway = game.awayTeamName || "";
+    return leagueOdds.find((odds) => {
+      const homeMatch = teamNamesMatch(espnHome, odds.homeTeam);
+      const awayMatch = teamNamesMatch(espnAway, odds.awayTeam);
+      if (!homeMatch || !awayMatch) return false;
+      // Also check date matches (commence_time is ISO UTC)
+      const oddsDate = new Date(odds.commenceTime).toLocaleDateString("en-CA", {
+        timeZone: "America/Los_Angeles",
+      });
+      return game.date === oddsDate;
+    }) ?? null;
+  }, [leagueOdds, game.homeTeamName, game.awayTeamName, game.date]);
 
   const getDateLabel = () => {
     if (isToday) return "Today";
@@ -264,6 +308,39 @@ export function GameCard({ game, homeTeam, awayTeam, league }: GameCardProps) {
                 <CalendarPlus className="w-3 h-3" />
                 Add to iCalendar
               </Button>
+            )}
+            {showOddsButton && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-xs h-7"
+                onClick={() => setShowOdds(!showOdds)}
+              >
+                <TrendingUp className="w-3 h-3" />
+                {showOdds ? "Hide Odds" : "Odds"}
+                <ChevronDown className={`w-3 h-3 transition-transform ${showOdds ? "rotate-180" : ""}`} />
+              </Button>
+            )}
+          </div>
+        )}
+
+        {showOdds && (
+          <div className="pt-3 border-t">
+            {oddsLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ) : gameOdds ? (
+              <OddsDisplay
+                odds={gameOdds}
+                homeTeamName={homeTeamName}
+                awayTeamName={awayTeamName}
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground text-center">
+                Odds not available for this game
+              </p>
             )}
           </div>
         )}
