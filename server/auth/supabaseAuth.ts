@@ -73,12 +73,18 @@ export async function setupAuth(app: Express) {
   // Login route - constructs OAuth URL manually with PKCE
   app.get("/api/login", async (req, res) => {
     try {
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.error("Missing env vars - SUPABASE_URL:", !!supabaseUrl, "SUPABASE_ANON_KEY:", !!supabaseAnonKey);
+        return res.status(500).json({ error: "Server misconfigured" });
+      }
+
       const { verifier, challenge } = generatePKCE();
 
       // Store PKCE verifier in session (per-user, not singleton)
       (req.session as any).codeVerifier = verifier;
 
       const redirectTo = `${req.protocol}://${req.get("host")}/api/callback`;
+      console.log("Login redirect_to:", redirectTo);
 
       const params = new URLSearchParams({
         provider: "google",
@@ -90,12 +96,18 @@ export async function setupAuth(app: Express) {
       // Save session before redirecting so the cookie is set
       await new Promise<void>((resolve, reject) => {
         req.session.save((err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) {
+            console.error("Session save error:", err);
+            reject(err);
+          } else {
+            resolve();
+          }
         });
       });
 
-      res.redirect(`${supabaseUrl}/auth/v1/authorize?${params}`);
+      const authUrl = `${supabaseUrl}/auth/v1/authorize?${params}`;
+      console.log("Redirecting to:", authUrl);
+      res.redirect(authUrl);
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Failed to initiate login" });
